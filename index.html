@@ -3,26 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smarlit Bushing - Staff Console</title>
+  <title>Smarlit Bushing</title>
+  
+  <!-- Markdown 即時解析器 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f6f8; color: #333; line-height: 1.6; }
-    .container { max-width: 800px; margin: 40px auto; padding: 25px; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .container { max-width: 900px; margin: 30px auto; padding: 25px; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     h1, h2, h3 { color: #1a1a1a; margin-bottom: 15px; }
     .subtitle { color: #666; margin-bottom: 20px; }
     
     .card { background: #fafafa; border: 1px solid #e1e4e8; border-radius: 6px; padding: 20px; margin-bottom: 20px; }
     .form-group { margin-bottom: 15px; }
     label { display: block; font-weight: 600; margin-bottom: 5px; }
-    input[type="text"], input[type="password"], textarea, select {
+    input[type="text"], input[type="password"] {
       width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;
     }
     .file-drop-zone { border: 2px dashed #0066cc; border-radius: 6px; padding: 30px; text-align: center; background: #f0f7ff; cursor: pointer; margin-bottom: 15px; }
     
-    button { padding: 10px 20px; background: #0066cc; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; }
+    button { padding: 8px 16px; background: #0066cc; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 14px; }
     button:hover { background: #0052a3; }
-    button.secondary { background: #6c757d; }
-    button.secondary:hover { background: #5a6268; }
+    button.secondary { background: #e2e8f0; color: #333; }
+    button.secondary:hover { background: #cbd5e1; }
     
     .status-msg { margin-top: 15px; padding: 10px; border-radius: 4px; font-size: 14px; display: none; }
     .status-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
@@ -31,6 +35,29 @@
     
     .view-panel { display: none; }
     .badge { display: inline-block; padding: 3px 8px; background: #e2e8f0; border-radius: 12px; font-size: 12px; margin-left: 5px; }
+
+    /* 渲染區頂部工具列 */
+    .site-toolbar {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 15px; background: #24292e; color: #fff; border-radius: 6px 6px 0 0;
+    }
+    .site-toolbar-title { font-weight: bold; font-size: 16px; }
+    .site-toolbar-actions { display: flex; gap: 8px; }
+
+    /* 初次開啟提示橫幅 */
+    .notice-banner {
+      background: #fff3cd; color: #856404; padding: 10px 15px;
+      border: 1px solid #ffeeba; border-top: none; font-size: 14px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+
+    /* Iframe 與 Markdown 容器 */
+    .render-wrapper { border: 1px solid #e1e4e8; border-top: none; border-radius: 0 0 6px 6px; background: #fff; overflow: hidden; }
+    iframe.site-frame { width: 100%; height: 650px; border: none; display: block; }
+    .markdown-body { padding: 30px; line-height: 1.7; overflow-y: auto; max-height: 650px; }
+    .markdown-body h1, .markdown-body h2 { border-bottom: 1px solid #eaecef; padding-bottom: 0.3em; margin-top: 24px; }
+    .markdown-body code { background: #f6f8fa; padding: 0.2em 0.4em; border-radius: 3px; font-family: monospace; }
+    .markdown-body pre { background: #f6f8fa; padding: 16px; overflow: auto; border-radius: 6px; }
   </style>
 
   <!-- SPA 路由路徑還原腳本 -->
@@ -51,27 +78,27 @@
 </head>
 <body>
 
-  <div class="container">
-    <h1>Smarlit Bushing</h1>
-    <p class="subtitle">靜態網頁工具託管與同步系統</p>
+  <div class="container" id="main-container">
+    <h1 id="app-title">Smarlit Bushing</h1>
 
-    <!-- 首頁模式 -->
+    <!-- 1. 首頁視圖 -->
     <div id="home-view" class="view-panel">
+      <p class="subtitle">靜態網頁工具託管與同步系統</p>
       <div class="card">
-        <h3>檢視現有網站</h3>
+        <h3>查看別人所製作的網站</h3>
         <div style="display: flex; gap: 10px;">
-          <input type="text" id="site-code-input" placeholder="輸入網站代碼 (例如: my-app)">
-          <button onclick="navigateToSite()">前往</button>
+          <input type="text" id="site-code-input" placeholder="輸入網站代碼 (例如: cashier-app)">
+          <button onclick="navigateToSite()">前往網站</button>
         </div>
       </div>
-      <p style="font-size: 14px; color: #666;">存取管理後台：請在網址後方加上 <code>/staff</code></p>
+      <p style="font-size: 14px; color: #666;">管理員入口：在網址後方輸入 <code>/staff</code> 進行檔案部署</p>
     </div>
 
-    <!-- Staff 控制台模式 -->
+    <!-- 2. Staff 控制台視圖 -->
     <div id="staff-view" class="view-panel">
       <h2>Staff 管理控制台</h2>
       
-      <!-- 設定區塊：GitHub PAT 帳號設定 -->
+      <!-- 設定區塊：GitHub API -->
       <div class="card">
         <h3>1. GitHub API 設定</h3>
         <div class="form-group">
@@ -90,12 +117,12 @@
         <div id="config-status" class="status-msg"></div>
       </div>
 
-      <!-- 發布區塊：檔案上傳與部署 -->
+      <!-- 發布區塊：檔案上傳 -->
       <div class="card">
         <h3>2. 建立 / 更新專案網站</h3>
         <div class="form-group">
           <label for="upload-code">設定專案代碼 (Site Code)</label>
-          <input type="text" id="upload-code" placeholder="例如: cashier-app (不可包含中文或特殊符號)">
+          <input type="text" id="upload-code" placeholder="例如: cashier-app">
         </div>
 
         <div class="form-group">
@@ -112,22 +139,44 @@
       </div>
     </div>
 
-    <!-- 網站展演模式 -->
+    <!-- 3. 動態網站 / README 展演視圖 -->
     <div id="site-view" class="view-panel">
-      <div id="site-header" style="margin-bottom: 15px;"></div>
-      <div id="site-container"></div>
+      <!-- 頂部工具列 -->
+      <div class="site-toolbar">
+        <div class="site-toolbar-title" id="toolbar-title">Smarlit Bushing</div>
+        <div class="site-toolbar-actions">
+          <button class="secondary" onclick="switchViewMode('app')">網頁內容</button>
+          <button class="secondary" onclick="switchViewMode('md')">README.md</button>
+          <button onclick="navigateHome()">返回首頁</button>
+        </div>
+      </div>
+
+      <!-- 初次開啟提示橫幅 -->
+      <div id="readme-notice" class="notice-banner" style="display: none;">
+        <span>這是你首次存取此網站，此專案包含說明文件。</span>
+        <button class="secondary" style="padding: 4px 10px; font-size: 12px;" onclick="switchViewMode('md')">立即查看 README</button>
+      </div>
+
+      <!-- 內容渲染容器 -->
+      <div class="render-wrapper">
+        <iframe id="site-iframe" class="site-frame" style="display: none;"></iframe>
+        <div id="markdown-container" class="markdown-body" style="display: none;"></div>
+      </div>
     </div>
   </div>
 
   <script>
-    // --- 萬用字元與 UTF-8 Base64 編碼工具 (解決中文亂碼) ---
+    const REPO_NAME = '/smarlit-bushing'; // 若儲存庫名稱調整請隨之修改
+    let currentSiteCode = '';
+
+    // --- UTF-8 Base64 工具 ---
     function utf8ToBase64(str) {
       return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
         return String.fromCharCode('0x' + p1);
       }));
     }
 
-    // --- 本地配置管理 ---
+    // --- 本地設定與 API ---
     function getConfig() {
       return {
         owner: localStorage.getItem('sb_gh_owner') || '',
@@ -175,21 +224,12 @@
       }
     }
 
-    // --- 檔案處理與發布邏輯 ---
+    // --- 檔案發布邏輯 ---
     let selectedFiles = [];
-
     function handleFileSelect(evt) {
-      const files = evt.target.files;
-      selectedFiles = Array.from(files);
-      updateFileListUI();
-    }
-
-    function updateFileListUI() {
+      selectedFiles = Array.from(evt.target.files);
       const listEl = document.getElementById('file-list');
-      if (selectedFiles.length === 0) {
-        listEl.innerHTML = '';
-        return;
-      }
+      if (selectedFiles.length === 0) { listEl.innerHTML = ''; return; }
       let html = '<strong>已選擇檔案：</strong><ul>';
       selectedFiles.forEach(f => {
         html += `<li>${f.name} <span class="badge">${(f.size/1024).toFixed(1)} KB</span></li>`;
@@ -198,7 +238,6 @@
       listEl.innerHTML = html;
     }
 
-    // 取得遠端檔案的 SHA（更新檔時需要）
     async function getFileSha(owner, repo, path, token) {
       try {
         const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
@@ -208,9 +247,7 @@
           const data = await res.json();
           return data.sha;
         }
-      } catch (e) {
-        return null;
-      }
+      } catch (e) { return null; }
       return null;
     }
 
@@ -220,35 +257,26 @@
       const statusEl = document.getElementById('deploy-status');
 
       if (!config.token || !config.owner) {
-        showStatus(statusEl, '請先在下方完成 GitHub API 設定與驗證。', 'error');
+        showStatus(statusEl, '請先完成上方 GitHub API 設定與驗證。', 'error');
+        return;
+      }
+      if (!siteCode || selectedFiles.length === 0) {
+        showStatus(statusEl, '請填寫專案代碼並選取檔案。', 'error');
         return;
       }
 
-      if (!siteCode) {
-        showStatus(statusEl, '請輸入專案代碼 (Site Code)。', 'error');
-        return;
-      }
-
-      if (selectedFiles.length === 0) {
-        showStatus(statusEl, '請選擇至少一個檔案 (例如 index.html)。', 'error');
-        return;
-      }
-
-      showStatus(statusEl, '準備同步至 GitHub...', 'info');
+      showStatus(statusEl, '準備上傳至 GitHub...', 'info');
 
       try {
         for (let file of selectedFiles) {
           showStatus(statusEl, `正在上傳 ${file.name}...`, 'info');
-          
           const contentText = await file.text();
           const base64Content = utf8ToBase64(contentText);
           const path = `sites/${siteCode}/${file.name}`;
-
-          // 檢查檔案是否已存在，取得 sha
           const existingSha = await getFileSha(config.owner, config.repo, path, config.token);
 
           const payload = {
-            message: `Deploy ${siteCode}: ${file.name} via Smarlit Bushing`,
+            message: `Deploy ${siteCode}: ${file.name}`,
             content: base64Content,
             branch: 'main'
           };
@@ -256,24 +284,17 @@
 
           const uploadRes = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${path}`, {
             method: 'PUT',
-            headers: {
-              'Authorization': `Bearer ${config.token}`,
-              'Content-Type': 'application/json'
-            },
+            headers: { 'Authorization': `Bearer ${config.token}`, 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
           });
 
-          if (!uploadRes.ok) {
-            const errData = await uploadRes.json();
-            throw new Error(`上傳 ${file.name} 失敗: ${errData.message}`);
-          }
+          if (!uploadRes.ok) throw new Error(`上傳 ${file.name} 失敗`);
         }
 
-        const siteUrl = `${window.location.origin}/smarlit-bushing/${siteCode}`;
-        showStatus(statusEl, `部署完成！專案網址：<a href="${siteUrl}" target="_blank">${siteUrl}</a>`, 'success');
+        const siteUrl = `${window.location.origin}${REPO_NAME}/${siteCode}`;
+        showStatus(statusEl, `部署成功！網站網址：<a href="${siteUrl}" target="_blank">${siteUrl}</a>`, 'success');
         selectedFiles = [];
-        updateFileListUI();
-
+        document.getElementById('file-list').innerHTML = '';
       } catch (err) {
         showStatus(statusEl, err.message, 'error');
       }
@@ -285,11 +306,82 @@
       el.style.display = 'block';
     }
 
-    // --- 路由解析器 ---
+    // --- 動態渲染與 Markdown 解析邏輯 ---
+    async function loadSiteContent(siteCode, isMarkdownMode) {
+      currentSiteCode = siteCode;
+      document.getElementById('toolbar-title').innerText = `網站：${siteCode}`;
+
+      const iframe = document.getElementById('site-iframe');
+      const mdContainer = document.getElementById('markdown-container');
+      const noticeBanner = document.getElementById('readme-notice');
+
+      // 相對路徑指引至靜態檔案目錄
+      const targetPath = `${REPO_NAME}/sites/${siteCode}`;
+
+      if (isMarkdownMode) {
+        // Markdown 模式
+        iframe.style.display = 'none';
+        mdContainer.style.display = 'block';
+        noticeBanner.style.display = 'none';
+        mdContainer.innerHTML = '<p style="color:#666;">正在讀取 README.md ...</p>';
+
+        try {
+          const res = await fetch(`${targetPath}/README.md`);
+          if (res.ok) {
+            const markdownText = await res.text();
+            mdContainer.innerHTML = marked.parse(markdownText);
+          } else {
+            mdContainer.innerHTML = '<p style="color:#721c24;">此專案未提供 README.md 說明文件。</p>';
+          }
+        } catch (e) {
+          mdContainer.innerHTML = '<p style="color:#721c24;">讀取文件失敗，請確認檔案是否存在。</p>';
+        }
+
+      } else {
+        // 網頁 (Iframe) 模式
+        mdContainer.style.display = 'none';
+        iframe.style.display = 'block';
+        iframe.src = `${targetPath}/index.html`;
+
+        // 檢查初次開啟與 README 狀態
+        checkFirstVisitReadme(siteCode, targetPath);
+      }
+    }
+
+    async function checkFirstVisitReadme(siteCode, targetPath) {
+      const storageKey = `sb_visited_${siteCode}`;
+      const noticeBanner = document.getElementById('readme-notice');
+      
+      if (!localStorage.getItem(storageKey)) {
+        // 標記為已造訪
+        localStorage.setItem(storageKey, 'true');
+        try {
+          // 發送 HEAD 請求確認 README.md 是否存在
+          const res = await fetch(`${targetPath}/README.md`, { method: 'HEAD' });
+          if (res.ok) {
+            noticeBanner.style.display = 'flex';
+          }
+        } catch (e) {}
+      } else {
+        noticeBanner.style.display = 'none';
+      }
+    }
+
+    function switchViewMode(mode) {
+      if (!currentSiteCode) return;
+      if (mode === 'md') {
+        window.history.pushState({}, '', `${REPO_NAME}/${currentSiteCode}/md`);
+        loadSiteContent(currentSiteCode, true);
+      } else {
+        window.history.pushState({}, '', `${REPO_NAME}/${currentSiteCode}`);
+        loadSiteContent(currentSiteCode, false);
+      }
+    }
+
+    // --- 萬用路由解析器 ---
     function parseRoute() {
       const path = window.location.pathname;
-      const repoName = '/smarlit-bushing';
-      let cleanPath = path.startsWith(repoName) ? path.slice(repoName.length) : path;
+      let cleanPath = path.startsWith(REPO_NAME) ? path.slice(REPO_NAME.length) : path;
       if (cleanPath.endsWith('/')) cleanPath = cleanPath.slice(0, -1);
 
       document.querySelectorAll('.view-panel').forEach(el => el.style.display = 'none');
@@ -302,18 +394,25 @@
       } else {
         const parts = cleanPath.slice(1).split('/');
         const siteCode = parts[0];
+        const subRoute = parts[1] ? parts[1].toLowerCase() : '';
+        const isMarkdown = (subRoute === 'md' || subRoute === 'markdown');
+
         document.getElementById('site-view').style.display = 'block';
-        document.getElementById('site-header').innerHTML = `<h2>網站代碼：${siteCode}</h2>`;
-        document.getElementById('site-container').innerHTML = `<p>網站內容已存於 GitHub 儲存庫 <code>sites/${siteCode}/</code> 資料夾中。</p>`;
+        loadSiteContent(siteCode, isMarkdown);
       }
     }
 
     function navigateToSite() {
       const code = document.getElementById('site-code-input').value.trim();
       if (code) {
-        window.history.pushState({}, '', `/smarlit-bushing/${code}`);
+        window.history.pushState({}, '', `${REPO_NAME}/${code}`);
         parseRoute();
       }
+    }
+
+    function navigateHome() {
+      window.history.pushState({}, '', `${REPO_NAME}/`);
+      parseRoute();
     }
 
     window.addEventListener('popstate', parseRoute);
