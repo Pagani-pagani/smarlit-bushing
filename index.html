@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smarlit Bushing</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f6f8; color: #333; line-height: 1.6; }
+    .container { max-width: 800px; margin: 50px auto; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    h1 { margin-bottom: 10px; color: #1a1a1a; }
+    .subtitle { color: #666; margin-bottom: 20px; }
+    .search-box { display: flex; gap: 10px; margin-bottom: 20px; }
+    input[type="text"] { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; }
+    button { padding: 10px 20px; background: #0066cc; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+    button:hover { background: #0052a3; }
+    .view-panel { display: none; padding: 15px; background: #eef5fc; border-left: 4px solid #0066cc; margin-top: 20px; }
+  </style>
+
+  <!-- 路由路徑還原腳本 (必備) -->
+  <script type="text/javascript">
+    (function(l) {
+      if (l.search[1] === 'p') {
+        var decoded = l.search.slice(1).split('&').map(function(s) { 
+          return s.replace(/~and~/g, '&') 
+        }).filter(function(s) {
+          return s.slice(0, 2) === 'p='
+        })[0].split('=')[1];
+        window.history.replaceState(null, null,
+          l.pathname.slice(0, -1) + decoded + l.hash
+        );
+      }
+    }(window.location));
+  </script>
+</head>
+<body>
+
+  <div class="container" id="app">
+    <h1>Smarlit Bushing</h1>
+    <p class="subtitle">輸入代碼檢視網站，或存取控制台。</p>
+
+    <!-- 主頁面：代碼搜尋 -->
+    <div id="home-view">
+      <div class="search-box">
+        <input type="text" id="site-code-input" placeholder="輸入網站代碼 (例如: demo-app)">
+        <button onclick="navigateToSite()">前往網站</button>
+      </div>
+      <p style="font-size: 14px; color: #888;">提示：可以直接在網址後加上代碼存取，例如 smarlit-bushing.github.io/代碼</p>
+    </div>
+
+    <!-- 動態渲染顯示區 (路由改變時切換內容) -->
+    <div id="router-content" class="view-panel"></div>
+  </div>
+
+  <script>
+    // 基礎路由解析器
+    function parseRoute() {
+      const path = window.location.pathname;
+      const repoName = '/smarlit-bushing'; // 若儲存庫名稱不同請替換
+      let cleanPath = path.startsWith(repoName) ? path.slice(repoName.length) : path;
+      if (cleanPath.endsWith('/')) cleanPath = cleanPath.slice(0, -1);
+
+      const routerContent = document.getElementById('router-content');
+      const homeView = document.getElementById('home-view');
+
+      if (!cleanPath || cleanPath === '') {
+        // 首頁
+        homeView.style.display = 'block';
+        routerContent.style.display = 'none';
+      } else if (cleanPath === '/staff') {
+        // 設定與登入頁面
+        homeView.style.display = 'none';
+        routerContent.style.display = 'block';
+        routerContent.innerHTML = '<h2>Staff 管理控制台</h2><p>後續步驟將新增 GitHub 帳號連動與檔案上傳介面。</p>';
+      } else {
+        // 特定代碼檢視或 MD 模式
+        const parts = cleanPath.slice(1).split('/');
+        const siteCode = parts[0];
+        const isMarkdown = parts[1] === 'md' || parts[1] === 'markdown';
+
+        homeView.style.display = 'none';
+        routerContent.style.display = 'block';
+
+        if (isMarkdown) {
+          routerContent.innerHTML = `<h2>網站 [${siteCode}] 的 README 文件</h2><p>預覽 Markdown 檔案內容區塊。</p>`;
+        } else {
+          routerContent.innerHTML = `<h2>正在載入網站：${siteCode}</h2><p>預覽渲染容器 (iframe) 區塊。</p>`;
+        }
+      }
+    }
+
+    function navigateToSite() {
+      const code = document.getElementById('site-code-input').value.trim();
+      if (code) {
+        window.history.pushState({}, '', `/smarlit-bushing/${code}`);
+        parseRoute();
+      }
+    }
+
+    // 監聽網址變化與頁面載入
+    window.addEventListener('popstate', parseRoute);
+    window.addEventListener('DOMContentLoaded', parseRoute);
+  </script>
+</body>
+</html>
