@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BlankFocus - 極簡流體專注時鐘</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    }
+
+    body, html {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-color: #0d0e15;
+      color: #ffffff;
+    }
+
+    /* WebGL / Canvas 動態背景 */
+    #canvas-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* 中央極簡時鐘與儀表板 */
+    .center-dashboard {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .clock-time {
+      font-size: 7.5rem;
+      font-weight: 200;
+      letter-spacing: -2px;
+      color: rgba(255, 255, 255, 0.95);
+      text-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+
+    .clock-date {
+      font-size: 1.25rem;
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.6);
+      margin-top: 15px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    /* Spotify 控制按鈕 (右側/側邊懸浮) */
+    .spotify-toggle-btn {
+      position: absolute;
+      right: 30px;
+      bottom: 30px;
+      z-index: 50;
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      padding: 14px 24px;
+      border-radius: 40px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .spotify-toggle-btn:hover {
+      background: rgba(255, 255, 255, 0.22);
+      transform: translateY(-2px);
+      border-color: rgba(255, 255, 255, 0.35);
+    }
+
+    .spotify-icon {
+      width: 22px;
+      height: 22px;
+      fill: #1DB954;
+    }
+
+    /* Spotify 側邊彈出面板 */
+    .spotify-drawer {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      bottom: 20px;
+      width: 380px;
+      z-index: 40;
+      background: rgba(18, 18, 20, 0.75);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 24px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: -10px 20px 50px rgba(0,0,0,0.5);
+      transform: translateX(420px);
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: auto;
+    }
+
+    .spotify-drawer.open {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .drawer-header {
+      padding: 18px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .drawer-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.85);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .close-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.7);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      transition: 0.2s;
+    }
+
+    .close-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+      color: #fff;
+    }
+
+    .spotify-iframe-container {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      background: transparent;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* 密碼防誤觸選單 / 設定解鎖機制 */
+    .lock-hint {
+      position: absolute;
+      bottom: 25px;
+      left: 30px;
+      z-index: 10;
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.35);
+      letter-spacing: 1px;
+    }
+
+    /* PIN Code 彈窗 */
+    .pin-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(20px);
+      z-index: 100;
+      display: none;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .pin-card {
+      background: rgba(30, 30, 35, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 30px 40px;
+      border-radius: 20px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+      width: 320px;
+    }
+
+    .pin-card h3 {
+      font-size: 1.2rem;
+      font-weight: 500;
+      margin-bottom: 20px;
+      color: #fff;
+    }
+
+    .pin-input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(0,0,0,0.3);
+      color: #fff;
+      font-size: 1.1rem;
+      text-align: center;
+      outline: none;
+      margin-bottom: 20px;
+    }
+
+    .pin-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .pin-btn {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .pin-btn.cancel { background: rgba(255,255,255,0.1); color: #ccc; }
+    .pin-btn.confirm { background: #1DB954; color: #fff; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+  <!-- WebGL 動態流體/極光桌布 -->
+  <div id="canvas-container">
+    <canvas id="fluid-canvas"></canvas>
+  </div>
+
+  <!-- 中央極簡時鐘 -->
+  <div class="center-dashboard">
+    <div class="clock-time" id="clock-time">12:00</div>
+    <div class="clock-date" id="clock-date">2026年7月30日 星期四</div>
+  </div>
+
+  <!-- 提示文字 -->
+  <div class="lock-hint">連擊螢幕 10 下解鎖設定模式</div>
+
+  <!-- Spotify 控制按鈕 -->
+  <button class="spotify-toggle-btn" onclick="toggleSpotify()">
+    <svg class="spotify-icon" viewBox="0 0 24 24">
+      <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.508 17.31c-.221.362-.689.479-1.05.258-2.825-1.727-6.38-2.116-10.569-1.16-.413.097-.83-.16-.927-.572-.097-.413.16-.83.572-.927 4.577-1.045 8.528-.598 11.716 1.353.361.22.478.688.258 1.048zm1.464-3.265c-.277.451-.865.598-1.317.321-3.232-1.986-8.163-2.56-11.985-1.402-.508.155-1.045-.133-1.199-.641-.155-.508.133-1.045.641-1.199 4.37-1.326 9.802-.676 13.522 1.611.451.277.599.866.321 1.317zM19.09 11c-.332.544-1.036.721-1.58.389-3.83-2.274-10.155-2.485-13.823-1.372-.612.185-1.264-.161-1.449-.773-.185-.612.161-1.264.773-1.449 4.298-1.303 11.271-1.055 15.688 1.564.544.332.721 1.036.389 1.58z"/>
+    </svg>
+    <span id="spotify-btn-text">播放 Spotify 音樂</span>
+  </button>
+
+  <!-- Spotify 側欄播歌器 (關閉時仍繼續背景播放) -->
+  <div class="spotify-drawer" id="spotify-drawer">
+    <div class="drawer-header">
+      <div class="drawer-title">
+        <svg class="spotify-icon" viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.508 17.31c-.221.362-.689.479-1.05.258-2.825-1.727-6.38-2.116-10.569-1.16-.413.097-.83-.16-.927-.572-.097-.413.16-.83.572-.927 4.577-1.045 8.528-.598 11.716 1.353.361.22.478.688.258 1.048zm1.464-3.265c-.277.451-.865.598-1.317.321-3.232-1.986-8.163-2.56-11.985-1.402-.508.155-1.045-.133-1.199-.641-.155-.508.133-1.045.641-1.199 4.37-1.326 9.802-.676 13.522 1.611.451.277.599.866.321 1.317zM19.09 11c-.332.544-1.036.721-1.58.389-3.83-2.274-10.155-2.485-13.823-1.372-.612.185-1.264-.161-1.449-.773-.185-.612.161-1.264.773-1.449 4.298-1.303 11.271-1.055 15.688 1.564.544.332.721 1.036.389 1.58z"/></svg>
+        專屬歌單
+      </div>
+      <button class="close-btn" onclick="toggleSpotify()">✕</button>
+    </div>
+    <div class="spotify-iframe-container">
+      <iframe id="spotify-frame" src="https://open.spotify.com/embed/playlist/7dU6lGNYpeuMKHMOglqWTk?utm_source=generator&theme=0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+    </div>
+  </div>
+
+  <!-- 解鎖 PIN Modal -->
+  <div class="pin-modal" id="pin-modal">
+    <div class="pin-card">
+      <h3>輸入設定密碼</h3>
+      <input type="password" id="pin-input" class="pin-input" placeholder="請輸入 Setting" />
+      <div class="pin-actions">
+        <button class="pin-btn cancel" onclick="closePinModal()">取消</button>
+        <button class="pin-btn confirm" onclick="verifyPin()">解鎖</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 1. 即時動態時鐘更新
+    function updateClock() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      
+      document.getElementById('clock-time').innerText = `${hours}:${minutes}:${seconds}`;
+
+      const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+      document.getElementById('clock-date').innerText = now.toLocaleDateString('zh-TW', options);
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // 2. Spotify 側欄切換功能 (收回時持續背景播放)
+    let isSpotifyOpen = false;
+    function toggleSpotify() {
+      const drawer = document.getElementById('spotify-drawer');
+      const btnText = document.getElementById('spotify-btn-text');
+      isSpotifyOpen = !isSpotifyOpen;
+
+      if (isSpotifyOpen) {
+        drawer.classList.add('open');
+        btnText.innerText = "收回播歌面板 (繼續播放)";
+      } else {
+        drawer.classList.remove('open');
+        btnText.innerText = "開啟 Spotify 面板";
+      }
+    }
+
+    // 3. Apple Watch 風格流體與觸控漣漪動態桌布 (Canvas 繪製)
+    const canvas = document.getElementById('fluid-canvas');
+    const ctx = canvas.getContext('2d');
+
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+
+    // 動態粒子與流體點
+    class Particle {
+      constructor(x, y) {
+        this.x = x || Math.random() * width;
+        this.y = y || Math.random() * height;
+        this.vx = (Math.random() - 0.5) * 1.2;
+        this.vy = (Math.random() - 0.5) * 1.2;
+        this.radius = Math.random() * 180 + 100;
+        this.color = `hsla(${Math.random() * 60 + 220}, 75%, 55%, `; // 藍紫色極光流體
+        this.alpha = Math.random() * 0.25 + 0.15;
+      }
+
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+
+        if (this.x < -this.radius) this.x = width + this.radius;
+        if (this.x > width + this.radius) this.x = -this.radius;
+        if (this.y < -this.radius) this.y = height + this.radius;
+        if (this.y > height + this.radius) this.y = -this.radius;
+      }
+
+      draw() {
+        ctx.beginPath();
+        let gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
+        gradient.addColorStop(0, this.color + this.alpha + ')');
+        gradient.addColorStop(1, this.color + '0)');
+        ctx.fillStyle = gradient;
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    const particles = Array.from({ length: 12 }, () => new Particle());
+
+    // 觸控與滑鼠漣漪動態 (Apple Watch 質感點擊)
+    let ripples = [];
+    class Ripple {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.radius = 10;
+        this.maxRadius = 220;
+        this.alpha = 0.6;
+        this.speed = 4;
+      }
+
+      update() {
+        this.radius += this.speed;
+        this.alpha -= 0.012;
+      }
+
+      draw() {
+        if (this.alpha <= 0) return;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255, 255, 255, ${this.alpha})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+    }
+
+    function animate() {
+      ctx.fillStyle = 'rgba(13, 14, 21, 0.2)'; // 保持暗色極光拖尾
+      ctx.fillRect(0, 0, width, height);
+
+      particles.forEach(p => {
+        p.update();
+        p.draw();
+      });
+
+      ripples.forEach((r, index) => {
+        r.update();
+        r.draw();
+        if (r.alpha <= 0) ripples.splice(index, 1);
+      });
+
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    // 4. 連擊 10 下防誤觸解鎖機制
+    let clickCount = 0;
+    let clickTimer = null;
+
+    document.addEventListener('pointerdown', (e) => {
+      // 避開 Spotify 側欄與按鈕互動
+      if (e.target.closest('.spotify-drawer') || e.target.closest('.spotify-toggle-btn') || e.target.closest('.pin-modal')) {
+        return;
+      }
+
+      // 新增點擊漣漪動畫
+      ripples.push(new Ripple(e.clientX, e.clientY));
+
+      clickCount++;
+      clearTimeout(clickTimer);
+
+      if (clickCount >= 10) {
+        openPinModal();
+        clickCount = 0;
+      } else {
+        clickTimer = setTimeout(() => { clickCount = 0; }, 3000);
+      }
+    });
+
+    function openPinModal() {
+      document.getElementById('pin-modal').style.display = 'flex';
+      document.getElementById('pin-input').value = '';
+      document.getElementById('pin-input').focus();
+    }
+
+    function closePinModal() {
+      document.getElementById('pin-modal').style.display = 'none';
+    }
+
+    function verifyPin() {
+      const val = document.getElementById('pin-input').value;
+      if (val === 'Setting' || val === 'setting') {
+        alert("驗證成功！進入系統設定模式。");
+        closePinModal();
+      } else {
+        alert("密碼錯誤！請輸入 Setting");
+      }
+    }
+  </script>
+</body>
+</html>
