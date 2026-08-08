@@ -16,7 +16,7 @@
 
     .container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
     .card { background: #fff; border-radius: 8px; padding: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
-    h2 { margin-bottom: 15px; color: #2d3748; }
+    h2, h3 { margin-bottom: 15px; color: #2d3748; }
     
     .form-group { margin-bottom: 15px; }
     label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 14px; }
@@ -26,13 +26,26 @@
     
     .btn { padding: 10px 18px; background: #3182ce; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 15px; }
     .btn:hover { background: #2b6cb0; }
-    .btn-secondary { background: #718096; }
+    .btn-secondary { background: #718096; color: #fff; }
     .btn-secondary:hover { background: #4a5568; }
+    .btn-sm { padding: 5px 10px; font-size: 13px; }
     .btn-link { background: none; border: none; color: #3182ce; cursor: pointer; text-decoration: underline; font-size: 14px; padding: 0; }
 
     .file-uploader { border: 2px dashed #3182ce; background: #ebf8ff; padding: 30px; border-radius: 6px; text-align: center; cursor: pointer; }
-    .site-list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #edf2f7; }
+    
+    .site-list-item { border-bottom: 1px solid #edf2f7; padding: 15px 0; }
     .site-list-item:last-child { border-bottom: none; }
+    .site-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+
+    /* 統計數據卡片網格 */
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: #f7fafc; padding: 12px; border-radius: 6px; margin-top: 10px; }
+    .stat-box { text-align: center; }
+    .stat-number { font-size: 20px; font-weight: bold; color: #2b6cb0; }
+    .stat-label { font-size: 12px; color: #718096; }
+
+    .log-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+    .log-table th, .log-table td { padding: 8px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    .log-table th { background: #edf2f7; color: #4a5568; }
 
     .view-panel { display: none; }
     .status-box { margin-top: 15px; padding: 10px; border-radius: 5px; font-size: 14px; display: none; }
@@ -128,19 +141,19 @@
         <h2>網站管理控制台</h2>
         <div>
           <span id="user-display" style="margin-right: 15px; font-weight: 600;"></span>
-          <button class="btn btn-secondary" onclick="handleLogout()">登出</button>
+          <button class="btn btn-secondary btn-sm" onclick="handleLogout()">登出</button>
         </div>
       </div>
 
-      <!-- 背景同步 GitHub 設定 (選擇性) -->
+      <!-- 背景同步 GitHub 設定 -->
       <div class="card">
         <h3>GitHub 資料庫同步設定 (備份防遺失)</h3>
-        <p style="font-size: 13px; color: #718096; margin-bottom: 10px;">設定後，你在本地發布的網站檔案會同步備份至 GitHub。</p>
+        <p style="font-size: 13px; color: #718096; margin-bottom: 10px;">設定後，發布的網站與訪客統計數據會備份至 GitHub。</p>
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px;">
           <input type="text" id="gh-owner" placeholder="GitHub 帳號">
           <input type="text" id="gh-repo" value="smarlit-bushing" placeholder="儲存庫">
           <input type="password" id="gh-token" placeholder="Personal Access Token">
-          <button class="btn btn-secondary" onclick="saveGitHubConfig()">儲存設定</button>
+          <button class="btn btn-secondary btn-sm" onclick="saveGitHubConfig()">儲存設定</button>
         </div>
       </div>
 
@@ -149,7 +162,7 @@
         <h3>部署新網站</h3>
         <div class="form-group">
           <label for="site-code">網站存取代碼 (Site Code)</label>
-          <input type="text" id="site-code" placeholder="例如: cashier-app (訪問網址將為 /cashier-app)">
+          <input type="text" id="site-code" placeholder="例如: cashier-app">
         </div>
 
         <div class="form-group">
@@ -161,50 +174,52 @@
           <div id="file-list-display" style="margin-top: 10px;"></div>
         </div>
 
-        <button class="btn" onclick="deploySiteProcess()">立即部署網站</button>
+        <button class="btn" onclick="deploySiteProcess()">區域部署並即時開啟</button>
         <div id="deploy-status" class="status-box"></div>
       </div>
 
-      <!-- 部署歷史列表 -->
+      <!-- 部署歷史列表與訪客統計分析 -->
       <div class="card">
-        <h3>我管理的網站</h3>
+        <h3>我管理的網站與訪客數據統計</h3>
         <div id="my-sites-list"></div>
       </div>
     </div>
 
-    <!-- 4. 網站渲染視圖 -->
+    <!-- 4. 網站展演視圖 -->
     <div id="view-site-render" class="view-panel">
       <div style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
         <h3 id="render-site-title">專案載入中...</h3>
         <div>
-          <button class="btn btn-secondary" onclick="toggleReadmeView()" id="readme-toggle-btn" style="display:none;">查看 README</button>
-          <button class="btn btn-secondary" onclick="navigateTo('/staff')">返回控制台</button>
+          <button class="btn btn-secondary btn-sm" onclick="navigateTo('/staff')">返回控制台</button>
         </div>
       </div>
       <iframe id="site-iframe" class="render-frame"></iframe>
-      <div id="readme-container" class="card" style="display: none; margin-top: 20px;"></div>
     </div>
 
   </div>
 
   <script>
-    // --- 全域變數與儲存 Key ---
+    // --- 全域變數與 Key ---
     const STORAGE_KEY_USER = 'sb_user_account';
     const STORAGE_KEY_SITES = 'sb_deployed_sites';
     const STORAGE_KEY_GH = 'sb_gh_config';
+    const STORAGE_KEY_ANALYTICS = 'sb_site_analytics';
     
     let isRegisterMode = false;
     let selectedFiles = [];
-    let currentViewingCode = '';
+    
+    // 訪客停留時間追蹤器狀態
+    let activeAnalyticsSession = {
+      siteCode: null,
+      startTime: null
+    };
 
-    // --- 網址路徑建構器 (完全解決雙斜線 // 問題) ---
+    // --- 網址路徑處理 ---
     function getCleanRoute() {
       const path = window.location.pathname;
-      // 取得 Repository 基礎路徑 (例如 /smarlit-bushing)
       const baseRepo = path.startsWith('/smarlit-bushing') ? '/smarlit-bushing' : '';
       let relativePath = path.slice(baseRepo.length);
 
-      // 去除尾端多餘斜線
       if (relativePath.length > 1 && relativePath.endsWith('/')) {
         relativePath = relativePath.slice(0, -1);
       }
@@ -212,8 +227,10 @@
     }
 
     function navigateTo(targetPath) {
+      // 在離開頁面時結束前一次的統計會話
+      endAnalyticsSession();
+
       const { baseRepo } = getCleanRoute();
-      // 確保拼接時不產生連續斜線
       let finalUrl = baseRepo;
       if (targetPath.startsWith('/')) {
         finalUrl += targetPath;
@@ -224,7 +241,71 @@
       parseRouter();
     }
 
-    // --- 步驟 1: 管理帳號登入 / 註冊邏輯 ---
+    // --- 訪客統計核心邏輯 ---
+    function startAnalyticsSession(siteCode) {
+      endAnalyticsSession(); // 確保上一個會話已結算
+
+      activeAnalyticsSession = {
+        siteCode: siteCode,
+        startTime: Date.now()
+      };
+
+      // 更新造訪次數
+      const analyticsData = JSON.parse(localStorage.getItem(STORAGE_KEY_ANALYTICS) || '{}');
+      if (!analyticsData[siteCode]) {
+        analyticsData[siteCode] = {
+          totalVisits: 0,
+          totalDurationSec: 0,
+          logs: []
+        };
+      }
+
+      analyticsData[siteCode].totalVisits += 1;
+      localStorage.setItem(STORAGE_KEY_ANALYTICS, JSON.stringify(analyticsData));
+    }
+
+    function endAnalyticsSession() {
+      if (!activeAnalyticsSession.siteCode || !activeAnalyticsSession.startTime) return;
+
+      const siteCode = activeAnalyticsSession.siteCode;
+      const durationSec = Math.max(1, Math.round((Date.now() - activeAnalyticsSession.startTime) / 1000));
+
+      const analyticsData = JSON.parse(localStorage.getItem(STORAGE_KEY_ANALYTICS) || '{}');
+      if (analyticsData[siteCode]) {
+        analyticsData[siteCode].totalDurationSec += durationSec;
+        
+        // 紀錄明細（保留最新 10 筆）
+        const newLog = {
+          timestamp: new Date().toLocaleString(),
+          durationSec: durationSec
+        };
+        analyticsData[siteCode].logs.unshift(newLog);
+        if (analyticsData[siteCode].logs.length > 10) {
+          analyticsData[siteCode].logs.pop();
+        }
+
+        localStorage.setItem(STORAGE_KEY_ANALYTICS, JSON.stringify(analyticsData));
+        
+        // 同步數據至 GitHub 備份
+        syncAnalyticsToGitHub(siteCode, analyticsData[siteCode]);
+      }
+
+      // 重置狀態
+      activeAnalyticsSession = { siteCode: null, startTime: null };
+    }
+
+    // 格式化秒數顯示 (例如: 2分 15秒)
+    function formatDuration(totalSec) {
+      if (!totalSec || totalSec <= 0) return '0 秒';
+      const mins = Math.floor(totalSec / 60);
+      const secs = totalSec % 60;
+      if (mins > 0) {
+        return `${mins} 分 ${secs} 秒`;
+      }
+      return `${secs} 秒`;
+    }
+
+    // --- 帳號驗證與 Auth ---
     function toggleAuthMode() {
       isRegisterMode = !isRegisterMode;
       document.getElementById('auth-title').innerText = isRegisterMode ? '註冊 Smarlit Bushing 帳號' : '登入 Smarlit Bushing 管理帳號';
@@ -244,29 +325,28 @@
       if (isRegisterMode) {
         const newUser = { email, name: name || email.split('@')[0], password, createdAt: new Date().toISOString() };
         localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(newUser));
-        showStatus(statusEl, '註冊成功！系統已永久紀錄帳號。', 'success');
+        showStatus(statusEl, '註冊成功！系統已儲存帳號。', 'success');
         setTimeout(() => parseRouter(), 800);
       } else {
         const savedUser = JSON.parse(localStorage.getItem(STORAGE_KEY_USER) || 'null');
         if (!savedUser) {
-          showStatus(statusEl, '尚未建立帳號，請先點選下方「註冊」。', 'error');
+          showStatus(statusEl, '尚未建立帳號，請點選下方註冊。', 'error');
           return;
         }
         if (savedUser.email === email && savedUser.password === password) {
           showStatus(statusEl, '登入成功！', 'success');
           setTimeout(() => parseRouter(), 500);
         } else {
-          showStatus(statusEl, '帳號或密碼錯誤。', 'error');
+          showStatus(statusEl, '帳號或密碼不符合。', 'error');
         }
       }
     }
 
     function handleLogout() {
-      // 清除登入狀態（如果需要的話），此處範例保留帳號資料，僅切換頁面
       navigateTo('/');
     }
 
-    // --- 步驟 2: 檔案選擇與部署邏輯 ---
+    // --- 部署與 GitHub 同步 ---
     function handleFileSelect(e) {
       selectedFiles = Array.from(e.target.files);
       const display = document.getElementById('file-list-display');
@@ -293,7 +373,7 @@
         return;
       }
 
-      showStatus(statusEl, '正在封裝網頁並部署至本地虛擬主機...', 'info');
+      showStatus(statusEl, '正在部署網站...', 'info');
 
       try {
         const fileDataMap = {};
@@ -303,11 +383,11 @@
         }
 
         if (!fileDataMap['index.html']) {
-          showStatus(statusEl, '檔案列表中必須包含 index.html 作為首頁。', 'error');
+          showStatus(statusEl, '檔案列表中必須包含 index.html。', 'error');
           return;
         }
 
-        // 1. 寫入本地快取 (達到秒級立即開啟)
+        // 1. 本地儲存
         const allSites = JSON.parse(localStorage.getItem(STORAGE_KEY_SITES) || '{}');
         allSites[siteCode] = {
           code: siteCode,
@@ -316,16 +396,22 @@
         };
         localStorage.setItem(STORAGE_KEY_SITES, JSON.stringify(allSites));
 
-        // 2. 背景同步至 GitHub (如果已設定)
+        // 2. 初始化統計欄位
+        const analyticsData = JSON.parse(localStorage.getItem(STORAGE_KEY_ANALYTICS) || '{}');
+        if (!analyticsData[siteCode]) {
+          analyticsData[siteCode] = { totalVisits: 0, totalDurationSec: 0, logs: [] };
+          localStorage.setItem(STORAGE_KEY_ANALYTICS, JSON.stringify(analyticsData));
+        }
+
+        // 3. 背景同步 GitHub
         syncToGitHubBackground(siteCode, fileDataMap);
 
-        showStatus(statusEl, `部署完成！可直接開啟網站。`, 'success');
+        showStatus(statusEl, `部署完成！正在前往網站...`, 'success');
         renderMySitesList();
 
-        // 3. 按下部署後直接開啟該網站
         setTimeout(() => {
           navigateTo(`/${siteCode}`);
-        }, 1000);
+        }, 800);
 
       } catch (err) {
         showStatus(statusEl, `部署失敗: ${err.message}`, 'error');
@@ -342,7 +428,6 @@
         const base64Content = btoa(unescape(encodeURIComponent(content)));
 
         try {
-          // 檢查 sha
           let sha = null;
           const getRes = await fetch(`https://api.github.com/repos/${ghConfig.owner}/${ghConfig.repo}/contents/${path}`, {
             headers: { 'Authorization': `Bearer ${ghConfig.token}` }
@@ -366,17 +451,48 @@
       }
     }
 
+    async function syncAnalyticsToGitHub(siteCode, data) {
+      const ghConfig = JSON.parse(localStorage.getItem(STORAGE_KEY_GH) || 'null');
+      if (!ghConfig || !ghConfig.token) return;
+
+      const path = `sites/${siteCode}/data/analytics.json`;
+      const content = JSON.stringify(data, null, 2);
+      const base64Content = btoa(unescape(encodeURIComponent(content)));
+
+      try {
+        let sha = null;
+        const getRes = await fetch(`https://api.github.com/repos/${ghConfig.owner}/${ghConfig.repo}/contents/${path}`, {
+          headers: { 'Authorization': `Bearer ${ghConfig.token}` }
+        });
+        if (getRes.ok) {
+          const resData = await getRes.json();
+          sha = resData.sha;
+        }
+
+        const payload = { message: `Analytics update: ${siteCode}`, content: base64Content, branch: 'main' };
+        if (sha) payload.sha = sha;
+
+        await fetch(`https://api.github.com/repos/${ghConfig.owner}/${ghConfig.repo}/contents/${path}`, {
+          method: 'PUT',
+          headers: { 'Authorization': `Bearer ${ghConfig.token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (e) {}
+    }
+
     function saveGitHubConfig() {
       const owner = document.getElementById('gh-owner').value.trim();
       const repo = document.getElementById('gh-repo').value.trim();
       const token = document.getElementById('gh-token').value.trim();
       localStorage.setItem(STORAGE_KEY_GH, JSON.stringify({ owner, repo, token }));
-      alert('GitHub 同步設定已儲存！');
+      alert('GitHub 設定已儲存！');
     }
 
+    // 渲染管理員控制台的網站與訪客數據
     function renderMySitesList() {
       const listEl = document.getElementById('my-sites-list');
       const allSites = JSON.parse(localStorage.getItem(STORAGE_KEY_SITES) || '{}');
+      const analyticsData = JSON.parse(localStorage.getItem(STORAGE_KEY_ANALYTICS) || '{}');
       const keys = Object.keys(allSites);
 
       if (keys.length === 0) {
@@ -386,57 +502,93 @@
 
       let html = '';
       keys.forEach(code => {
+        const siteStats = analyticsData[code] || { totalVisits: 0, totalDurationSec: 0, logs: [] };
+        const avgSec = siteStats.totalVisits > 0 ? Math.round(siteStats.totalDurationSec / siteStats.totalVisits) : 0;
+
         html += `
           <div class="site-list-item">
-            <div>
-              <strong>/${code}</strong>
-              <div style="font-size:12px; color:#718096;">更新時間: ${allSites[code].updatedAt}</div>
+            <div class="site-header-flex">
+              <div>
+                <strong>/${code}</strong>
+                <span style="font-size:12px; color:#718096; margin-left:10px;">更新時間: ${allSites[code].updatedAt}</span>
+              </div>
+              <button class="btn btn-sm" onclick="navigateTo('/${code}')">開啟網站</button>
             </div>
-            <div>
-              <button class="btn" style="padding:4px 10px; font-size:13px;" onclick="navigateTo('/${code}')">開啟網站</button>
+
+            <!-- 數據統計儀表板 -->
+            <div class="stats-grid">
+              <div class="stat-box">
+                <div class="stat-number">${siteStats.totalVisits}</div>
+                <div class="stat-label">總造訪次數</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-number">${formatDuration(siteStats.totalDurationSec)}</div>
+                <div class="stat-label">總停留時間</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-number">${formatDuration(avgSec)}</div>
+                <div class="stat-label">平均停留時間</div>
+              </div>
             </div>
+
+            <!-- 近期紀錄明細 -->
+            ${siteStats.logs.length > 0 ? `
+              <details style="margin-top: 10px; font-size: 13px; color: #4a5568;">
+                <summary style="cursor: pointer; font-weight: 600;">查看最近 10 筆造訪明細</summary>
+                <table class="log-table">
+                  <thead>
+                    <tr><th>時間</th><th>停留時間</th></tr>
+                  </thead>
+                  <tbody>
+                    ${siteStats.logs.map(log => `
+                      <tr>
+                        <td>${log.timestamp}</td>
+                        <td>${formatDuration(log.durationSec)}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </details>
+            ` : ''}
           </div>
         `;
       });
       listEl.innerHTML = html;
     }
 
-    // --- 步驟 3: 網站預覽與他人網站欣賞 ---
+    // --- 網站渲染與導向 ---
     function openSiteFromInput() {
       const code = document.getElementById('home-code-input').value.trim();
       if (code) navigateTo(`/${code}`);
     }
 
-    function loadAndRenderSite(siteCode, isMdMode) {
-      currentViewingCode = siteCode;
+    function loadAndRenderSite(siteCode) {
       document.getElementById('render-site-title').innerText = `正在瀏覽網站: /${siteCode}`;
+
+      // 開始追蹤此訪客 session
+      startAnalyticsSession(siteCode);
 
       const allSites = JSON.parse(localStorage.getItem(STORAGE_KEY_SITES) || '{}');
       const targetSite = allSites[siteCode];
       const iframe = document.getElementById('site-iframe');
 
       if (targetSite && targetSite.files['index.html']) {
-        // 從本地虛擬檔案系統直接渲染 (秒開)
-        const htmlContent = targetSite.files['index.html'];
-        iframe.srcdoc = htmlContent;
+        iframe.srcdoc = targetSite.files['index.html'];
       } else {
-        // 若本地無紀錄，嘗試從 GitHub Pages / sites/ 路徑讀取
         const { baseRepo } = getCleanRoute();
         iframe.src = `${baseRepo}/sites/${siteCode}/index.html`;
       }
     }
 
-    // --- 萬用路由器 (Router) ---
+    // --- 路由器 (Router) ---
     function parseRouter() {
       const { relativePath } = getCleanRoute();
       document.querySelectorAll('.view-panel').forEach(el => el.style.display = 'none');
 
       if (relativePath === '/' || relativePath === '') {
-        // 1. 首頁
         document.getElementById('view-home').style.display = 'block';
         renderPublicSitesList();
       } else if (relativePath === '/staff') {
-        // 2. 管理頁面：檢查登入狀態
         const user = JSON.parse(localStorage.getItem(STORAGE_KEY_USER) || 'null');
         if (!user) {
           document.getElementById('view-auth').style.display = 'block';
@@ -446,14 +598,9 @@
           renderMySitesList();
         }
       } else {
-        // 3. 開啟指定的網站代碼 /[code]
-        const cleanCode = relativePath.slice(1);
-        const parts = cleanCode.split('/');
-        const siteCode = parts[0];
-        const isMd = parts[1] === 'md' || parts[1] === 'markdown';
-
+        const siteCode = relativePath.slice(1).split('/')[0];
         document.getElementById('view-site-render').style.display = 'block';
-        loadAndRenderSite(siteCode, isMd);
+        loadAndRenderSite(siteCode);
       }
     }
 
@@ -470,9 +617,9 @@
       let html = '';
       keys.forEach(code => {
         html += `
-          <div class="site-list-item">
+          <div class="site-list-item" style="display:flex; justify-content:space-between; align-items:center;">
             <span>網站代碼：<strong>${code}</strong></span>
-            <button class="btn btn-secondary" style="padding:4px 10px; font-size:13px;" onclick="navigateTo('/${code}')">前往欣賞</button>
+            <button class="btn btn-secondary btn-sm" onclick="navigateTo('/${code}')">前往欣賞</button>
           </div>
         `;
       });
@@ -485,6 +632,8 @@
       el.style.display = 'block';
     }
 
+    // 監聽頁面關閉或離開事件，確保存放最後的停留秒數
+    window.addEventListener('beforeunload', endAnalyticsSession);
     window.addEventListener('popstate', parseRouter);
     window.addEventListener('DOMContentLoaded', parseRouter);
   </script>
