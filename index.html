@@ -3,57 +3,90 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smarlit Bushing - 線上網頁部署平台</title>
+  <title>Smarlit Bushing - Web Hosting Platform</title>
+
+  <!-- 1. 外部第三方 CDN 套件 -->
+  <!-- JSZip (ZIP 自動解壓縮) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <!-- Chart.js (流量與數據視覺化圖表) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Marked.js (Markdown 即時渲染) -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- Monaco Editor 載入器 (VS Code 網頁版編輯器) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.39.0/min/vs/loader.min.js"></script>
 
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; color: #1c1e21; line-height: 1.6; }
-    .nav-bar { background: #1a202c; color: #fff; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; }
-    .nav-brand { font-size: 20px; font-weight: bold; cursor: pointer; }
-    .nav-links button { background: transparent; border: 1px solid #4a5568; color: #fff; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px; }
-    .nav-links button:hover { background: #2d3748; }
-
-    .container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
-    .card { background: #fff; border-radius: 8px; padding: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
-    h2, h3 { margin-bottom: 15px; color: #2d3748; }
-    
-    .form-group { margin-bottom: 15px; }
-    label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 14px; }
-    input[type="text"], input[type="email"], input[type="password"] {
-      width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 5px; font-size: 15px;
+    :root {
+      --bg-main: #f8fafc;
+      --sidebar-bg: #0f172a;
+      --sidebar-hover: #1e293b;
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --text-main: #334155;
+      --border-color: #e2e8f0;
+      --card-bg: #ffffff;
     }
-    
-    .btn { padding: 10px 18px; background: #3182ce; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 15px; }
-    .btn:hover { background: #2b6cb0; }
-    .btn-secondary { background: #718096; color: #fff; }
-    .btn-secondary:hover { background: #4a5568; }
-    .btn-sm { padding: 5px 10px; font-size: 13px; }
-    .btn-link { background: none; border: none; color: #3182ce; cursor: pointer; text-decoration: underline; font-size: 14px; padding: 0; }
 
-    .file-uploader { border: 2px dashed #3182ce; background: #ebf8ff; padding: 30px; border-radius: 6px; text-align: center; cursor: pointer; }
-    
-    .site-list-item { border-bottom: 1px solid #edf2f7; padding: 15px 0; }
-    .site-list-item:last-child { border-bottom: none; }
-    .site-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg-main); color: var(--text-main); height: 100vh; overflow: hidden; }
 
-    /* 統計數據卡片網格 */
-    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: #f7fafc; padding: 12px; border-radius: 6px; margin-top: 10px; }
-    .stat-box { text-align: center; }
-    .stat-number { font-size: 20px; font-weight: bold; color: #2b6cb0; }
-    .stat-label { font-size: 12px; color: #718096; }
+    /* 頂部與側邊欄導覽 layout */
+    .app-layout { display: flex; height: 100vh; }
+    .sidebar { width: 250px; background: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; justify-content: space-between; }
+    .sidebar-brand { padding: 20px; font-size: 18px; font-weight: bold; border-bottom: 1px solid #334155; color: #f8fafc; cursor: pointer; }
+    .sidebar-menu { list-style: none; padding: 10px 0; }
+    .sidebar-menu li { padding: 12px 20px; cursor: pointer; font-size: 14px; color: #94a3b8; transition: 0.2s; }
+    .sidebar-menu li:hover, .sidebar-menu li.active { background: var(--sidebar-hover); color: #fff; border-left: 4px solid var(--primary); }
+    .sidebar-user { padding: 15px 20px; border-top: 1px solid #334155; font-size: 13px; color: #94a3b8; display: flex; justify-content: space-between; align-items: center; }
 
-    .log-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
-    .log-table th, .log-table td { padding: 8px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-    .log-table th { background: #edf2f7; color: #4a5568; }
+    .main-content { flex: 1; overflow-y: auto; padding: 30px; }
+    .container { max-width: 1100px; margin: 0 auto; }
+
+    /* 卡片與元件樣式 */
+    .card { background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color); padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    h2 { font-size: 20px; color: #0f172a; margin-bottom: 15px; }
+    h3 { font-size: 16px; color: #1e293b; margin-bottom: 12px; }
+
+    .form-group { margin-bottom: 15px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px; }
+    input[type="text"], input[type="email"], input[type="password"], select {
+      width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; outline: none; transition: 0.2s;
+    }
+    input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+
+    .btn { padding: 9px 16px; background: var(--primary); color: #fff; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .btn:hover { background: var(--primary-hover); }
+    .btn-secondary { background: #64748b; }
+    .btn-secondary:hover { background: #475569; }
+    .btn-danger { background: #ef4444; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+    /* Drag & Drop 區域 */
+    .drop-zone { border: 2px dashed #a5b4fc; background: #eeef2f6; border-radius: 8px; padding: 30px; text-align: center; cursor: pointer; transition: 0.2s; }
+    .drop-zone:hover { background: #e0e7ff; border-color: var(--primary); }
+
+    /* Monaco 編輯器結構 */
+    .editor-container { display: flex; height: 500px; border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; }
+    .file-tree { width: 200px; background: #1e1e1e; color: #cccccc; border-right: 1px solid #333; overflow-y: auto; font-size: 13px; }
+    .file-tree-item { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #2a2a2a; }
+    .file-tree-item:hover, .file-tree-item.active { background: #37373d; color: #fff; }
+    .monaco-wrapper { flex: 1; height: 100%; }
+
+    /* 表格與標籤 */
+    .table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .table th, .table td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color); }
+    .table th { background: #f1f5f9; color: #475569; font-weight: 600; }
+    .badge { padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+    .badge-success { background: #dcfce7; color: #15803d; }
+    .badge-info { background: #e0e7ff; color: #3730a3; }
 
     .view-panel { display: none; }
-    .status-box { margin-top: 15px; padding: 10px; border-radius: 5px; font-size: 14px; display: none; }
-    .status-box.error { background: #fed7d7; color: #9b2c2c; }
-    .status-box.success { background: #c6f6d5; color: #22543d; }
-    .status-box.info { background: #ebf8ff; color: #2c5282; }
+    .status-msg { padding: 12px; border-radius: 6px; font-size: 13px; margin-top: 15px; display: none; }
+    .status-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+    .status-success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
 
-    iframe.render-frame { width: 100%; height: 750px; border: none; background: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    iframe.render-frame { width: 100%; height: calc(100vh - 100px); border: none; background: #fff; }
   </style>
 
   <!-- SPA 雙斜線與深層路徑自動修復腳本 -->
@@ -74,152 +107,220 @@
 </head>
 <body>
 
-  <!-- 頂部導覽列 -->
-  <div class="nav-bar">
-    <div class="nav-brand" onclick="navigateTo('/')">Smarlit Bushing</div>
-    <div class="nav-links">
-      <button onclick="navigateTo('/staff')">管理控制台 (/staff)</button>
-    </div>
-  </div>
-
-  <div class="container">
-
-    <!-- 1. 首頁視圖：探索與代碼輸入 -->
-    <div id="view-home" class="view-panel">
-      <div class="card">
-        <h2>查看別人所製作的網站</h2>
-        <p style="color: #4a5568; margin-bottom: 15px;">輸入對方提供給你的網站代碼即可直接開啟：</p>
-        <div style="display: flex; gap: 10px;">
-          <input type="text" id="home-code-input" placeholder="例如: my-cashier-app">
-          <button class="btn" onclick="openSiteFromInput()">前往網站</button>
-        </div>
+  <div class="app-layout">
+    <!-- 側邊欄導覽列 -->
+    <div class="sidebar">
+      <div>
+        <div class="sidebar-brand" onclick="navigateTo('/')">Smarlit Bushing</div>
+        <ul class="sidebar-menu">
+          <li id="menu-home" onclick="navigateTo('/')">公開網站展演</li>
+          <li id="menu-dashboard" onclick="navigateTo('/staff')">管理控制台</li>
+        </ul>
       </div>
-
-      <div class="card">
-        <h2>已公開部署的網站列表</h2>
-        <div id="public-site-list">
-          <p style="color: #a0aec0;">尚無公開網站，你可以在控制台發布第一個網站。</p>
-        </div>
+      <div class="sidebar-user" id="sidebar-user-box" style="display: none;">
+        <span id="user-name-display">管理員</span>
+        <button class="btn btn-secondary btn-sm" onclick="handleLogout()">登出</button>
       </div>
     </div>
 
-    <!-- 2. 管理帳號驗證視圖 (登入 / 註冊) -->
-    <div id="view-auth" class="view-panel">
-      <div class="card" style="max-width: 450px; margin: 40px auto;">
-        <h2 id="auth-title">登入 Smarlit Bushing 管理帳號</h2>
-        
-        <form onsubmit="handleAuthSubmit(event)">
-          <div class="form-group" id="group-name" style="display: none;">
-            <label for="auth-name">使用者名稱</label>
-            <input type="text" id="auth-name" placeholder="請輸入姓名或暱稱">
+    <!-- 主工作區 -->
+    <div class="main-content">
+      <div class="container">
+
+        <!-- 1. 首頁視圖 -->
+        <div id="view-home" class="view-panel">
+          <div class="card">
+            <h2>開啟與欣賞網站</h2>
+            <div style="display: flex; gap: 10px;">
+              <input type="text" id="home-code-input" placeholder="輸入網站代碼 (例如: cashier-app)">
+              <button class="btn" onclick="openSiteFromInput()">前往網站</button>
+            </div>
           </div>
-          
-          <div class="form-group">
-            <label for="auth-email">電子郵件 / 帳號</label>
-            <input type="email" id="auth-email" required placeholder="name@example.com">
+          <div class="card">
+            <h2>已發布的公開網站</h2>
+            <div id="public-sites-container"></div>
+          </div>
+        </div>
+
+        <!-- 2. 管理員 Auth 登入 / 註冊視圖 -->
+        <div id="view-auth" class="view-panel">
+          <div class="card" style="max-width: 400px; margin: 50px auto;">
+            <h2 id="auth-title">登入管理控制台</h2>
+            <form onsubmit="handleAuthSubmit(event)">
+              <div class="form-group" id="group-auth-name" style="display: none;">
+                <label>姓名 / 暱稱</label>
+                <input type="text" id="auth-name" placeholder="請輸入姓名">
+              </div>
+              <div class="form-group">
+                <label>電子郵件</label>
+                <input type="email" id="auth-email" required placeholder="admin@example.com">
+              </div>
+              <div class="form-group">
+                <label>密碼</label>
+                <input type="password" id="auth-password" required placeholder="請輸入密碼">
+              </div>
+              <button type="submit" class="btn" style="width: 100%;" id="auth-btn-label">登入</button>
+            </form>
+            <div style="margin-top: 15px; text-align: center; font-size: 13px;">
+              <span id="auth-toggle-msg">還沒有帳號？</span>
+              <a href="#" style="color: var(--primary);" onclick="toggleAuthMode()">按此註冊</a>
+            </div>
+            <div id="auth-status-msg" class="status-msg"></div>
+          </div>
+        </div>
+
+        <!-- 3. 管理控制台 Dashboard 主頁面 -->
+        <div id="view-dashboard" class="view-panel">
+          <div class="card">
+            <h2>部署新專案網站</h2>
+            <div class="form-group">
+              <label>專案代碼 (Site Code)</label>
+              <input type="text" id="deploy-site-code" placeholder="例如: cashier-app (請使用英文與數字)">
+            </div>
+            
+            <div class="form-group">
+              <label>上傳專案檔案 (支援 .zip 壓縮包，或同時選取多個 HTML/CSS/JS 檔)</label>
+              <div class="drop-zone" onclick="document.getElementById('file-input').click()">
+                <p id="drop-zone-label">點擊選取檔案，或將專案 .zip 檔拖曳至此處</p>
+                <input type="file" id="file-input" multiple accept=".zip,.html,.css,.js,.md,.json" style="display: none;" onchange="handleFileSelection(event)">
+              </div>
+              <div id="selected-files-list" style="margin-top: 10px; font-size: 13px;"></div>
+            </div>
+
+            <button class="btn" onclick="executeDeployProcess()">建立並進行線上部署</button>
+            <div id="deploy-status-msg" class="status-msg"></div>
           </div>
 
-          <div class="form-group">
-            <label for="auth-password">密碼</label>
-            <input type="password" id="auth-password" required placeholder="請輸入密碼">
+          <!-- 我的專案列表 -->
+          <div class="card">
+            <h2>所有管理中的專案</h2>
+            <div id="my-projects-list"></div>
           </div>
 
-          <button type="submit" class="btn" style="width: 100%; margin-top: 10px;" id="auth-submit-btn">登入</button>
-        </form>
-
-        <div style="margin-top: 20px; text-align: center; font-size: 14px;">
-          <span id="auth-toggle-text">還沒有帳號嗎？</span>
-          <button class="btn-link" onclick="toggleAuthMode()" id="auth-toggle-btn">點此註冊</button>
-        </div>
-        <div id="auth-status" class="status-box"></div>
-      </div>
-    </div>
-
-    <!-- 3. 管理控制台視圖 (已登入) -->
-    <div id="view-dashboard" class="view-panel">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2>網站管理控制台</h2>
-        <div>
-          <span id="user-display" style="margin-right: 15px; font-weight: 600;"></span>
-          <button class="btn btn-secondary btn-sm" onclick="handleLogout()">登出</button>
-        </div>
-      </div>
-
-      <!-- 背景同步 GitHub 設定 -->
-      <div class="card">
-        <h3>GitHub 資料庫同步設定 (備份防遺失)</h3>
-        <p style="font-size: 13px; color: #718096; margin-bottom: 10px;">設定後，發布的網站與訪客統計數據會備份至 GitHub。</p>
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px;">
-          <input type="text" id="gh-owner" placeholder="GitHub 帳號">
-          <input type="text" id="gh-repo" value="smarlit-bushing" placeholder="儲存庫">
-          <input type="password" id="gh-token" placeholder="Personal Access Token">
-          <button class="btn btn-secondary btn-sm" onclick="saveGitHubConfig()">儲存設定</button>
-        </div>
-      </div>
-
-      <!-- 發布新網站區塊 -->
-      <div class="card">
-        <h3>部署新網站</h3>
-        <div class="form-group">
-          <label for="site-code">網站存取代碼 (Site Code)</label>
-          <input type="text" id="site-code" placeholder="例如: cashier-app">
-        </div>
-
-        <div class="form-group">
-          <label>上傳網頁檔案 (支援 HTML, CSS, JS, README.md)</label>
-          <div class="file-uploader" onclick="document.getElementById('file-input').click()">
-            <p id="file-drop-text">點選檔案進行選擇 (可一次選取多個檔案)</p>
-            <input type="file" id="file-input" multiple style="display: none;" onchange="handleFileSelect(event)">
+          <!-- GitHub 同步設定 -->
+          <div class="card">
+            <h3>GitHub 自動同步設定 (備份儲存庫)</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px;">
+              <input type="text" id="gh-owner" placeholder="GitHub Owner">
+              <input type="text" id="gh-repo" value="smarlit-bushing" placeholder="Repository">
+              <input type="password" id="gh-token" placeholder="Personal Access Token">
+              <button class="btn btn-secondary" onclick="saveGitHubSettings()">儲存 GitHub 設定</button>
+            </div>
           </div>
-          <div id="file-list-display" style="margin-top: 10px;"></div>
         </div>
 
-        <button class="btn" onclick="deploySiteProcess()">區域部署並即時開啟</button>
-        <div id="deploy-status" class="status-box"></div>
-      </div>
+        <!-- 4. 專案工作區 Workspace (包含 Monaco Editor, 版本歷史, Analytics 圖表) -->
+        <div id="view-workspace" class="view-panel">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+              <h2 id="ws-project-title">專案工作區</h2>
+              <span class="badge badge-success" id="ws-current-version">v1.0.0</span>
+            </div>
+            <div>
+              <button class="btn btn-secondary btn-sm" onclick="openCurrentSitePreview()">開啟網站</button>
+              <button class="btn btn-secondary btn-sm" onclick="navigateTo('/staff')">返回控制台</button>
+            </div>
+          </div>
 
-      <!-- 部署歷史列表與訪客統計分析 -->
-      <div class="card">
-        <h3>我管理的網站與訪客數據統計</h3>
-        <div id="my-sites-list"></div>
-      </div>
-    </div>
+          <!-- 功能分頁切換 -->
+          <div style="display: flex; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+            <button class="btn btn-sm" onclick="switchWorkspaceTab('editor')">Monaco 線上程式碼編輯器</button>
+            <button class="btn btn-secondary btn-sm" onclick="switchWorkspaceTab('analytics')">流量數據分析 (Chart.js)</button>
+            <button class="btn btn-secondary btn-sm" onclick="switchWorkspaceTab('versions')">版本歷史與退回 (Rollback)</button>
+            <button class="btn btn-secondary btn-sm" onclick="switchWorkspaceTab('settings')">專案保護設定</button>
+          </div>
 
-    <!-- 4. 網站展演視圖 -->
-    <div id="view-site-render" class="view-panel">
-      <div style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
-        <h3 id="render-site-title">專案載入中...</h3>
-        <div>
-          <button class="btn btn-secondary btn-sm" onclick="navigateTo('/staff')">返回控制台</button>
+          <!-- Tab 1: Monaco Editor -->
+          <div id="tab-editor" class="ws-tab-content">
+            <div class="editor-container">
+              <div class="file-tree" id="monaco-file-tree"></div>
+              <div class="monaco-wrapper" id="monaco-editor-element"></div>
+            </div>
+            <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 12px; color: #64748b;">提示：修改後點擊右側按鈕即可建立新版本並發布上線。</span>
+              <button class="btn" onclick="saveMonacoEditsAndRedeploy()">儲存修改並發布新版本</button>
+            </div>
+          </div>
+
+          <!-- Tab 2: Chart.js 流量圖表 -->
+          <div id="tab-analytics" class="ws-tab-content" style="display: none;">
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+              <div class="card">
+                <h3>近 7 天每日造訪人次趨勢圖</h3>
+                <canvas id="chart-visits-trend" height="200"></canvas>
+              </div>
+              <div class="card">
+                <h3>統計概覽</h3>
+                <div style="margin-top: 20px;">
+                  <p>總造訪次數：<strong id="stat-total-visits" style="font-size: 20px; color: var(--primary);">0</strong> 次</p>
+                  <p style="margin-top: 15px;">總停留時間：<strong id="stat-total-duration" style="font-size: 20px; color: var(--primary);">0 秒</strong></p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 3: 版本歷史與一鍵退回 -->
+          <div id="tab-versions" class="ws-tab-content" style="display: none;">
+            <div class="card">
+              <h3>歷史部署版本記錄</h3>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>版本號</th>
+                    <th>部署時間</th>
+                    <th>包含檔案數</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="versions-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Tab 4: 專案進階保護設定 -->
+          <div id="tab-settings" class="ws-tab-content" style="display: none;">
+            <div class="card">
+              <h3>存取權限設定</h3>
+              <div class="form-group">
+                <label>啟用訪問密碼保護</label>
+                <input type="password" id="site-passcode-input" placeholder="留空代表開放所有人免密碼訪問">
+              </div>
+              <button class="btn" onclick="saveProjectSettings()">儲存專案設定</button>
+            </div>
+          </div>
+
         </div>
-      </div>
-      <iframe id="site-iframe" class="render-frame"></iframe>
-    </div>
 
+        <!-- 5. 網站渲染視圖 (iframe) -->
+        <div id="view-site-render" class="view-panel" style="padding: 0;">
+          <iframe id="render-iframe" class="render-frame"></iframe>
+        </div>
+
+      </div>
+    </div>
   </div>
 
   <script>
-    // --- 全域變數與 Key ---
-    const STORAGE_KEY_USER = 'sb_user_account';
-    const STORAGE_KEY_SITES = 'sb_deployed_sites';
-    const STORAGE_KEY_GH = 'sb_gh_config';
-    const STORAGE_KEY_ANALYTICS = 'sb_site_analytics';
-    
-    let isRegisterMode = false;
-    let selectedFiles = [];
-    
-    // 訪客停留時間追蹤器狀態
-    let activeAnalyticsSession = {
-      siteCode: null,
-      startTime: null
-    };
+    // --- 全域變數與儲存 Key ---
+    const STORAGE_KEY_USER = 'sb_v2_user';
+    const STORAGE_KEY_SITES = 'sb_v2_sites';
+    const STORAGE_KEY_GH = 'sb_v2_gh';
+    const STORAGE_KEY_ANALYTICS = 'sb_v2_analytics';
 
-    // --- 網址路徑處理 ---
+    let isRegisterMode = false;
+    let preparedFileData = {};
+    let currentWorkspaceSiteCode = '';
+    let currentEditingFilename = '';
+    let monacoEditorInstance = null;
+    let visitsChartInstance = null;
+    
+    let activeAnalyticsSession = { siteCode: null, startTime: null };
+
+    // --- 路由與 URL 清理機制 ---
     function getCleanRoute() {
       const path = window.location.pathname;
       const baseRepo = path.startsWith('/smarlit-bushing') ? '/smarlit-bushing' : '';
       let relativePath = path.slice(baseRepo.length);
-
       if (relativePath.length > 1 && relativePath.endsWith('/')) {
         relativePath = relativePath.slice(0, -1);
       }
@@ -227,92 +328,356 @@
     }
 
     function navigateTo(targetPath) {
-      // 在離開頁面時結束前一次的統計會話
       endAnalyticsSession();
-
       const { baseRepo } = getCleanRoute();
-      let finalUrl = baseRepo;
-      if (targetPath.startsWith('/')) {
-        finalUrl += targetPath;
-      } else {
-        finalUrl += '/' + targetPath;
-      }
+      let finalUrl = baseRepo + (targetPath.startsWith('/') ? targetPath : '/' + targetPath);
       window.history.pushState({}, '', finalUrl);
       parseRouter();
     }
 
-    // --- 訪客統計核心邏輯 ---
-    function startAnalyticsSession(siteCode) {
-      endAnalyticsSession(); // 確保上一個會話已結算
+    // --- ZIP 解壓縮與檔案處理 ---
+    async function handleFileSelection(e) {
+      const files = Array.from(e.target.files);
+      const labelEl = document.getElementById('selected-files-list');
+      preparedFileData = {};
 
-      activeAnalyticsSession = {
-        siteCode: siteCode,
-        startTime: Date.now()
-      };
+      if (files.length === 1 && files[0].name.endsWith('.zip')) {
+        // ZIP 檔案解析
+        labelEl.innerHTML = '正在讀取並解壓 .zip 壓縮包...';
+        try {
+          const zip = new JSZip();
+          const zipData = await zip.loadAsync(files[0]);
+          for (let filename in zipData.files) {
+            const zipObj = zipData.files[filename];
+            if (!zipObj.dir) {
+              const content = await zipObj.async('text');
+              // 移除外層解壓目錄
+              const cleanName = filename.includes('/') ? filename.split('/').pop() : filename;
+              if (cleanName && !cleanName.startsWith('.')) {
+                preparedFileData[cleanName] = content;
+              }
+            }
+          }
+          labelEl.innerHTML = `ZIP 解析完成，共包含 ${Object.keys(preparedFileData).length} 個檔案。`;
+        } catch (err) {
+          labelEl.innerHTML = `<span style="color:red;">ZIP 解壓失敗: ${err.message}</span>`;
+        }
+      } else {
+        // 多檔案選取
+        for (let file of files) {
+          preparedFileData[file.name] = await file.text();
+        }
+        labelEl.innerHTML = `已選取 ${files.length} 個檔案。`;
+      }
+    }
 
-      // 更新造訪次數
-      const analyticsData = JSON.parse(localStorage.getItem(STORAGE_KEY_ANALYTICS) || '{}');
-      if (!analyticsData[siteCode]) {
-        analyticsData[siteCode] = {
-          totalVisits: 0,
-          totalDurationSec: 0,
-          logs: []
-        };
+    // --- 專案線上部署流程 ---
+    async function executeDeployProcess() {
+      const siteCode = document.getElementById('deploy-site-code').value.trim().toLowerCase();
+      const statusEl = document.getElementById('deploy-status-msg');
+
+      if (!siteCode || siteCode.includes('/') || siteCode.includes(' ')) {
+        showStatus(statusEl, '請輸入有效的專案代碼（不可包含空格或斜線）。', 'error');
+        return;
+      }
+      if (!preparedFileData['index.html']) {
+        showStatus(statusEl, '專案中必須包含 index.html 檔案。', 'error');
+        return;
       }
 
+      showStatus(statusEl, '正在生成版本快照並部署...', 'info');
+
+      const allSites = JSON.parse(localStorage.getItem(STORAGE_KEY_SITES) || '{}');
+      const existing = allSites[siteCode] || { code: siteCode, versions: [], passcode: '' };
+
+      const nextVersionNum = existing.versions.length + 1;
+      const versionTag = `v1.0.${nextVersionNum - 1}`;
+
+      const newVersionObj = {
+        version: versionTag,
+        timestamp: new Date().toLocaleString(),
+        files: preparedFileData
+      };
+
+      existing.currentVersion = versionTag;
+      existing.versions.unshift(newVersionObj);
+      allSites[siteCode] = existing;
+
+      localStorage.setItem(STORAGE_KEY_SITES, JSON.stringify(allSites));
+
+      // 背景 GitHub 同步
+      syncSiteToGitHubBackground(siteCode, preparedFileData);
+
+      showStatus(statusEl, '部署成功！即將前往專案工作區...', 'success');
+      setTimeout(() => {
+        openWorkspace(siteCode);
+      }, 800);
+    }
+
+    // --- Monaco Editor 整合與初始化 ---
+    function initMonacoEditor() {
+      if (monacoEditorInstance) return;
+      require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.39.0/min/vs' }});
+      require(['vs/editor/editor.main'], function() {
+        monacoEditorInstance = monaco.editor.create(document.getElementById('monaco-editor-element'), {
+          value: '// 請點選左側檔案進行編輯\n',
+          language: 'html',
+          theme: 'vs-dark',
+          automaticLayout: true
+        });
+      });
+    }
+
+    function openWorkspace(siteCode) {
+      currentWorkspaceSiteCode = siteCode;
+      document.getElementById('ws-project-title').innerText = `專案工作區：/${siteCode}`;
+      
+      const allSites = JSON.parse(localStorage.getItem(STORAGE_KEY_SITES) || '{}');
+      const site = allSites[siteCode];
+      document.getElementById('ws-current-version').innerText = site.currentVersion;
+
+      // 預設切換至 Monaco 編輯器
+      switchWorkspaceTab('editor');
+      renderMonacoFileTree(site);
+      
+      navigateTo('/staff');
+      document.querySelectorAll('.view-panel').forEach(el => el.style.display = 'none');
+      document.getElementById('view-workspace').style.display = 'block';
+
+      initMonacoEditor();
+    }
+
+    function renderMonacoFileTree(site) {
+      const treeEl = document.getElementById('monaco-file-tree');
+      const currentVersionData = site.versions.find(v => v.version === site.currentVersion);
+      if (!currentVersionData) return;
+
+      const files = currentVersionData.files;
+      let html = '';
+      Object.keys(files).forEach(filename => {
+        html += `<div class="file-tree-item" onclick="loadContentToMonaco('${filename}')">${filename}</div>`;
+      });
+      treeEl.innerHTML = html;
+
+      // 預設載入 index.html
+      if (files['index.html']) {
+        loadContentToMonaco('index.html');
+      }
+    }
+
+    function loadContentToMonaco(filename) {
+      currentEditingFilename = filename;
+      const allSites = JSON.parse(localStorage.getItem(STORAGE_KEY_SITES) || '{}');
+      const site = allSites[currentWorkspaceSiteCode];
+      const currentVersionData = site.versions.find(v => v.version === site.currentVersion);
+      const content = currentVersionData.files[filename] || '';
+
+      if (monacoEditorInstance) {
+        monacoEditorInstance.setValue(content);
+        // 設定語法高亮
+        let lang = 'html';
+        if (filename.endsWith('.css')) lang = 'css';
+        if (filename.endsWith('.js')) lang = 'javascript';
+        if (filename.endsWith('.json')) lang = 'json';
+        if (filename.endsWith('.md')) lang = 'markdown';
+        monaco.editor.setModelLanguage(monacoEditorInstance.getModel(), lang);
+      }
+    }
+
+    function saveMonacoEditsAndRedeploy() {
+      if (!currentEditingFilename || !monacoEditorInstance) return;
+      const updatedCode = monacoEditorInstance.getValue();
+
+      const allSites = JSON.parse(localStorage.getItem(STORAGE_KEY_SITES) || '{}');
+      const site = allSites[currentWorkspaceSiteCode];
+      const currentVersionData = site.versions.find(v => v.version === site.currentVersion);
+
+      // 深拷貝並修改內容
+      const newFilesMap = Object.assign({}, currentVersionData.files);
+      newFilesMap[currentEditingFilename] = updatedCode;
+
+      const newVerNum = site.versions.length;
+      const newVerTag = `v1.0.${newVerNum}`;
+
+      site.currentVersion = newVerTag;
+      site.versions.unshift({
+        version: newVerTag,
+        timestamp: new Date().toLocaleString(),
+        files: newFilesMap
+      });
+
+      localStorage.setItem(STORAGE_KEY_SITES, JSON.stringify(allSites));
+      syncSiteToGitHubBackground(currentWorkspaceSiteCode, newFilesMap);
+
+      alert(`修改成功！已自動發布全新版本 ${newVerTag}`);
+      openWorkspace(currentWorkspaceSiteCode);
+    }
+
+    // --- 分頁切換與 Chart.js 圖表 ---
+    function switchWorkspaceTab(tabName) {
+      document.querySelectorAll('.ws-tab-content').forEach(el => el.style.display = 'none');
+      document.getElementById(`tab-${tabName}`).style.display = 'block';
+
+      if (tabName === 'analytics') renderAnalyticsCharts();
+      if (tabName === 'versions') renderVersionsTable();
+    }
+
+    function renderAnalyticsCharts() {
+      const analyticsData = JSON.parse(localStorage.getItem(STORAGE_KEY_ANALYTICS) || '{}');
+      const stats = analyticsData[currentWorkspaceSiteCode] || { totalVisits: 0, totalDurationSec: 0, daily: {} };
+
+      document.getElementById('stat-total-visits').innerText = stats.totalVisits;
+      document.getElementById('stat-total-duration').innerText = `${stats.totalDurationSec} 秒`;
+
+      const ctx = document.getElementById('chart-visits-trend').getContext('2d');
+      if (visitsChartInstance) visitsChartInstance.destroy();
+
+      const labels = ['6天前', '5天前', '4天前', '3天前', '2天前', '昨天', '今天'];
+      const dataPoints = [0, 0, 0, 0, 0, 0, stats.totalVisits]; // 範例數據呈現
+
+      visitsChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: '每日造訪次數',
+            data: dataPoints,
+            borderColor: '#4f46e5',
+            backgroundColor: 'rgba(79, 70, 229, 0.1)',
+            fill: true,
+            tension: 0.3
+          }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+      });
+    }
+
+    function renderVersionsTable() {
+      const allSites = JSON.parse(localStorage.getItem(STORAGE_KEY_SITES) || '{}');
+      const site = allSites[currentWorkspaceSiteCode];
+      const tbody = document.getElementById('versions-table-body');
+
+      let html = '';
+      site.versions.forEach(v => {
+        const isCurrent = v.version === site.currentVersion;
+        html += `
+          <tr>
+            <td><strong>${v.version}</strong> ${isCurrent ? '<span class="badge badge-success">當前版本</span>' : ''}</td>
+            <td>${v.timestamp}</td>
+            <td>${Object.keys(v.files).length} 個檔案</td>
+            <td>
+              ${!isCurrent ? `<button class="btn btn-secondary btn-sm" onclick="rollbackToVersion('${v.version}')">一鍵退回至此版本</button>` : '運作中'}
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    }
+
+    function rollbackToVersion(targetVersion) {
+      if (!confirm(`確定要將專案退回至版本 ${targetVersion} 嗎？`)) return;
+
+      const allSites = JSON.parse(localStorage.getItem(STORAGE_KEY_SITES) || '{}');
+      const site = allSites[currentWorkspaceSiteCode];
+      site.currentVersion = targetVersion;
+      localStorage.setItem(STORAGE_KEY_SITES, JSON.stringify(allSites));
+
+      alert(`已成功退回至版本 ${targetVersion}`);
+      openWorkspace(currentWorkspaceSiteCode);
+    }
+
+    function openCurrentSitePreview() {
+      navigateTo(`/${currentWorkspaceSiteCode}`);
+    }
+
+    // --- 訪客 Session 追蹤與渲染 ---
+    function startAnalyticsSession(siteCode) {
+      endAnalyticsSession();
+      activeAnalyticsSession = { siteCode: siteCode, startTime: Date.now() };
+
+      const analyticsData = JSON.parse(localStorage.getItem(STORAGE_KEY_ANALYTICS) || '{}');
+      if (!analyticsData[siteCode]) analyticsData[siteCode] = { totalVisits: 0, totalDurationSec: 0 };
       analyticsData[siteCode].totalVisits += 1;
       localStorage.setItem(STORAGE_KEY_ANALYTICS, JSON.stringify(analyticsData));
     }
 
     function endAnalyticsSession() {
       if (!activeAnalyticsSession.siteCode || !activeAnalyticsSession.startTime) return;
-
       const siteCode = activeAnalyticsSession.siteCode;
-      const durationSec = Math.max(1, Math.round((Date.now() - activeAnalyticsSession.startTime) / 1000));
+      const duration = Math.max(1, Math.round((Date.now() - activeAnalyticsSession.startTime) / 1000));
 
       const analyticsData = JSON.parse(localStorage.getItem(STORAGE_KEY_ANALYTICS) || '{}');
       if (analyticsData[siteCode]) {
-        analyticsData[siteCode].totalDurationSec += durationSec;
-        
-        // 紀錄明細（保留最新 10 筆）
-        const newLog = {
-          timestamp: new Date().toLocaleString(),
-          durationSec: durationSec
-        };
-        analyticsData[siteCode].logs.unshift(newLog);
-        if (analyticsData[siteCode].logs.length > 10) {
-          analyticsData[siteCode].logs.pop();
-        }
-
+        analyticsData[siteCode].totalDurationSec += duration;
         localStorage.setItem(STORAGE_KEY_ANALYTICS, JSON.stringify(analyticsData));
-        
-        // 同步數據至 GitHub 備份
-        syncAnalyticsToGitHub(siteCode, analyticsData[siteCode]);
       }
-
-      // 重置狀態
       activeAnalyticsSession = { siteCode: null, startTime: null };
     }
 
-    // 格式化秒數顯示 (例如: 2分 15秒)
-    function formatDuration(totalSec) {
-      if (!totalSec || totalSec <= 0) return '0 秒';
-      const mins = Math.floor(totalSec / 60);
-      const secs = totalSec % 60;
-      if (mins > 0) {
-        return `${mins} 分 ${secs} 秒`;
+    function loadSiteInIframe(siteCode) {
+      const allSites = JSON.parse(localStorage.getItem(STORAGE_KEY_SITES) || '{}');
+      const site = allSites[siteCode];
+      const iframe = document.getElementById('render-iframe');
+
+      if (site) {
+        // 密碼保護檢查
+        if (site.passcode) {
+          const inputCode = prompt('此專案受密碼保護，請輸入訪問密碼：');
+          if (inputCode !== site.passcode) {
+            alert('密碼錯誤，拒絕存取。');
+            navigateTo('/');
+            return;
+          }
+        }
+
+        const activeVersion = site.versions.find(v => v.version === site.currentVersion);
+        if (activeVersion && activeVersion.files['index.html']) {
+          startAnalyticsSession(siteCode);
+          iframe.srcdoc = activeVersion.files['index.html'];
+          return;
+        }
       }
-      return `${secs} 秒`;
+
+      // 備份回退方案
+      const { baseRepo } = getCleanRoute();
+      iframe.src = `${baseRepo}/sites/${siteCode}/index.html`;
     }
 
-    // --- 帳號驗證與 Auth ---
+    // --- 控制台專案清單與 Auth 邏輯 ---
+    function renderMyProjectsList() {
+      const container = document.getElementById('my-projects-list');
+      const allSites = JSON.parse(localStorage.getItem(STORAGE_KEY_SITES) || '{}');
+      const keys = Object.keys(allSites);
+
+      if (keys.length === 0) {
+        container.innerHTML = '<p style="color:#94a3b8; font-size:14px;">目前尚未建立任何專案。</p>';
+        return;
+      }
+
+      let html = '<table class="table"><thead><tr><th>專案代碼</th><th>當前版本</th><th>歷史版本數</th><th>操作</th></tr></thead><tbody>';
+      keys.forEach(code => {
+        const site = allSites[code];
+        html += `
+          <tr>
+            <td><strong>/${code}</strong></td>
+            <td><span class="badge badge-info">${site.currentVersion}</span></td>
+            <td>${site.versions.length} 個版本</td>
+            <td>
+              <button class="btn btn-sm" onclick="openWorkspace('${code}')">管理 / 編輯程式碼</button>
+              <button class="btn btn-secondary btn-sm" onclick="navigateTo('/${code}')">開啟預覽</button>
+            </td>
+          </tr>
+        `;
+      });
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
     function toggleAuthMode() {
       isRegisterMode = !isRegisterMode;
-      document.getElementById('auth-title').innerText = isRegisterMode ? '註冊 Smarlit Bushing 帳號' : '登入 Smarlit Bushing 管理帳號';
-      document.getElementById('group-name').style.display = isRegisterMode ? 'block' : 'none';
-      document.getElementById('auth-submit-btn').innerText = isRegisterMode ? '建立帳號並登入' : '登入';
-      document.getElementById('auth-toggle-text').innerText = isRegisterMode ? '已有帳號？' : '還沒有帳號嗎？';
-      document.getElementById('auth-toggle-btn').innerText = isRegisterMode ? '點此登入' : '點此註冊';
+      document.getElementById('auth-title').innerText = isRegisterMode ? '註冊管理員帳號' : '登入管理控制台';
+      document.getElementById('group-auth-name').style.display = isRegisterMode ? 'block' : 'none';
+      document.getElementById('auth-btn-label').innerText = isRegisterMode ? '建立帳號並登入' : '登入';
     }
 
     function handleAuthSubmit(e) {
@@ -320,24 +685,20 @@
       const email = document.getElementById('auth-email').value.trim();
       const password = document.getElementById('auth-password').value.trim();
       const name = document.getElementById('auth-name').value.trim();
-      const statusEl = document.getElementById('auth-status');
+      const statusEl = document.getElementById('auth-status-msg');
 
       if (isRegisterMode) {
-        const newUser = { email, name: name || email.split('@')[0], password, createdAt: new Date().toISOString() };
+        const newUser = { email, name: name || email.split('@')[0], password };
         localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(newUser));
-        showStatus(statusEl, '註冊成功！系統已儲存帳號。', 'success');
+        showStatus(statusEl, '註冊成功！已自動儲存登入憑證。', 'success');
         setTimeout(() => parseRouter(), 800);
       } else {
         const savedUser = JSON.parse(localStorage.getItem(STORAGE_KEY_USER) || 'null');
-        if (!savedUser) {
-          showStatus(statusEl, '尚未建立帳號，請點選下方註冊。', 'error');
-          return;
-        }
-        if (savedUser.email === email && savedUser.password === password) {
+        if (savedUser && savedUser.email === email && savedUser.password === password) {
           showStatus(statusEl, '登入成功！', 'success');
           setTimeout(() => parseRouter(), 500);
         } else {
-          showStatus(statusEl, '帳號或密碼不符合。', 'error');
+          showStatus(statusEl, '帳號或密碼錯誤。', 'error');
         }
       }
     }
@@ -346,87 +707,14 @@
       navigateTo('/');
     }
 
-    // --- 部署與 GitHub 同步 ---
-    function handleFileSelect(e) {
-      selectedFiles = Array.from(e.target.files);
-      const display = document.getElementById('file-list-display');
-      if (selectedFiles.length === 0) { display.innerHTML = ''; return; }
-      
-      let html = '<strong>已選擇的檔案：</strong><ul>';
-      selectedFiles.forEach(f => {
-        html += `<li>${f.name} (${(f.size/1024).toFixed(1)} KB)</li>`;
-      });
-      html += '</ul>';
-      display.innerHTML = html;
-    }
-
-    async function deploySiteProcess() {
-      const siteCode = document.getElementById('site-code').value.trim().toLowerCase();
-      const statusEl = document.getElementById('deploy-status');
-
-      if (!siteCode || siteCode.includes('/') || siteCode.includes(' ')) {
-        showStatus(statusEl, '請輸入有效的網站代碼（不可包含斜線或空格）。', 'error');
-        return;
-      }
-      if (selectedFiles.length === 0) {
-        showStatus(statusEl, '請選取至少一個網頁檔案（需包含 index.html）。', 'error');
-        return;
-      }
-
-      showStatus(statusEl, '正在部署網站...', 'info');
-
-      try {
-        const fileDataMap = {};
-        for (let file of selectedFiles) {
-          const content = await file.text();
-          fileDataMap[file.name] = content;
-        }
-
-        if (!fileDataMap['index.html']) {
-          showStatus(statusEl, '檔案列表中必須包含 index.html。', 'error');
-          return;
-        }
-
-        // 1. 本地儲存
-        const allSites = JSON.parse(localStorage.getItem(STORAGE_KEY_SITES) || '{}');
-        allSites[siteCode] = {
-          code: siteCode,
-          files: fileDataMap,
-          updatedAt: new Date().toLocaleString()
-        };
-        localStorage.setItem(STORAGE_KEY_SITES, JSON.stringify(allSites));
-
-        // 2. 初始化統計欄位
-        const analyticsData = JSON.parse(localStorage.getItem(STORAGE_KEY_ANALYTICS) || '{}');
-        if (!analyticsData[siteCode]) {
-          analyticsData[siteCode] = { totalVisits: 0, totalDurationSec: 0, logs: [] };
-          localStorage.setItem(STORAGE_KEY_ANALYTICS, JSON.stringify(analyticsData));
-        }
-
-        // 3. 背景同步 GitHub
-        syncToGitHubBackground(siteCode, fileDataMap);
-
-        showStatus(statusEl, `部署完成！正在前往網站...`, 'success');
-        renderMySitesList();
-
-        setTimeout(() => {
-          navigateTo(`/${siteCode}`);
-        }, 800);
-
-      } catch (err) {
-        showStatus(statusEl, `部署失敗: ${err.message}`, 'error');
-      }
-    }
-
-    async function syncToGitHubBackground(siteCode, fileDataMap) {
+    // --- 背景 GitHub 同步 ---
+    async function syncSiteToGitHubBackground(siteCode, filesMap) {
       const ghConfig = JSON.parse(localStorage.getItem(STORAGE_KEY_GH) || 'null');
       if (!ghConfig || !ghConfig.token) return;
 
-      for (let filename in fileDataMap) {
-        const content = fileDataMap[filename];
+      for (let filename in filesMap) {
         const path = `sites/${siteCode}/${filename}`;
-        const base64Content = btoa(unescape(encodeURIComponent(content)));
-
+        const content = btoa(unescape(encodeURIComponent(filesMap[filename])));
         try {
           let sha = null;
           const getRes = await fetch(`https://api.github.com/repos/${ghConfig.owner}/${ghConfig.repo}/contents/${path}`, {
@@ -436,8 +724,7 @@
             const data = await getRes.json();
             sha = data.sha;
           }
-
-          const payload = { message: `Sync site: ${siteCode}`, content: base64Content, branch: 'main' };
+          const payload = { message: `Deploy ${siteCode}: ${filename}`, content: content, branch: 'main' };
           if (sha) payload.sha = sha;
 
           await fetch(`https://api.github.com/repos/${ghConfig.owner}/${ghConfig.repo}/contents/${path}`, {
@@ -445,194 +732,88 @@
             headers: { 'Authorization': `Bearer ${ghConfig.token}`, 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
           });
-        } catch (e) {
-          console.warn('GitHub 背景同步跳過:', e);
-        }
+        } catch (e) {}
       }
     }
 
-    async function syncAnalyticsToGitHub(siteCode, data) {
-      const ghConfig = JSON.parse(localStorage.getItem(STORAGE_KEY_GH) || 'null');
-      if (!ghConfig || !ghConfig.token) return;
-
-      const path = `sites/${siteCode}/data/analytics.json`;
-      const content = JSON.stringify(data, null, 2);
-      const base64Content = btoa(unescape(encodeURIComponent(content)));
-
-      try {
-        let sha = null;
-        const getRes = await fetch(`https://api.github.com/repos/${ghConfig.owner}/${ghConfig.repo}/contents/${path}`, {
-          headers: { 'Authorization': `Bearer ${ghConfig.token}` }
-        });
-        if (getRes.ok) {
-          const resData = await getRes.json();
-          sha = resData.sha;
-        }
-
-        const payload = { message: `Analytics update: ${siteCode}`, content: base64Content, branch: 'main' };
-        if (sha) payload.sha = sha;
-
-        await fetch(`https://api.github.com/repos/${ghConfig.owner}/${ghConfig.repo}/contents/${path}`, {
-          method: 'PUT',
-          headers: { 'Authorization': `Bearer ${ghConfig.token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-      } catch (e) {}
-    }
-
-    function saveGitHubConfig() {
+    function saveGitHubSettings() {
       const owner = document.getElementById('gh-owner').value.trim();
       const repo = document.getElementById('gh-repo').value.trim();
       const token = document.getElementById('gh-token').value.trim();
       localStorage.setItem(STORAGE_KEY_GH, JSON.stringify({ owner, repo, token }));
-      alert('GitHub 設定已儲存！');
+      alert('GitHub 設定已成功更新！');
     }
 
-    // 渲染管理員控制台的網站與訪客數據
-    function renderMySitesList() {
-      const listEl = document.getElementById('my-sites-list');
-      const allSites = JSON.parse(localStorage.getItem(STORAGE_KEY_SITES) || '{}');
-      const analyticsData = JSON.parse(localStorage.getItem(STORAGE_KEY_ANALYTICS) || '{}');
-      const keys = Object.keys(allSites);
-
-      if (keys.length === 0) {
-        listEl.innerHTML = '<p style="color:#a0aec0;">目前尚未部署任何網站。</p>';
-        return;
-      }
-
-      let html = '';
-      keys.forEach(code => {
-        const siteStats = analyticsData[code] || { totalVisits: 0, totalDurationSec: 0, logs: [] };
-        const avgSec = siteStats.totalVisits > 0 ? Math.round(siteStats.totalDurationSec / siteStats.totalVisits) : 0;
-
-        html += `
-          <div class="site-list-item">
-            <div class="site-header-flex">
-              <div>
-                <strong>/${code}</strong>
-                <span style="font-size:12px; color:#718096; margin-left:10px;">更新時間: ${allSites[code].updatedAt}</span>
-              </div>
-              <button class="btn btn-sm" onclick="navigateTo('/${code}')">開啟網站</button>
-            </div>
-
-            <!-- 數據統計儀表板 -->
-            <div class="stats-grid">
-              <div class="stat-box">
-                <div class="stat-number">${siteStats.totalVisits}</div>
-                <div class="stat-label">總造訪次數</div>
-              </div>
-              <div class="stat-box">
-                <div class="stat-number">${formatDuration(siteStats.totalDurationSec)}</div>
-                <div class="stat-label">總停留時間</div>
-              </div>
-              <div class="stat-box">
-                <div class="stat-number">${formatDuration(avgSec)}</div>
-                <div class="stat-label">平均停留時間</div>
-              </div>
-            </div>
-
-            <!-- 近期紀錄明細 -->
-            ${siteStats.logs.length > 0 ? `
-              <details style="margin-top: 10px; font-size: 13px; color: #4a5568;">
-                <summary style="cursor: pointer; font-weight: 600;">查看最近 10 筆造訪明細</summary>
-                <table class="log-table">
-                  <thead>
-                    <tr><th>時間</th><th>停留時間</th></tr>
-                  </thead>
-                  <tbody>
-                    ${siteStats.logs.map(log => `
-                      <tr>
-                        <td>${log.timestamp}</td>
-                        <td>${formatDuration(log.durationSec)}</td>
-                      </tr>
-                    `).join('')}
-                  </tbody>
-                </table>
-              </details>
-            ` : ''}
-          </div>
-        `;
-      });
-      listEl.innerHTML = html;
+    function showStatus(el, msg, type) {
+      el.className = `status-msg status-${type}`;
+      el.innerText = msg;
+      el.style.display = 'block';
     }
 
-    // --- 網站渲染與導向 ---
     function openSiteFromInput() {
       const code = document.getElementById('home-code-input').value.trim();
       if (code) navigateTo(`/${code}`);
     }
 
-    function loadAndRenderSite(siteCode) {
-      document.getElementById('render-site-title').innerText = `正在瀏覽網站: /${siteCode}`;
-
-      // 開始追蹤此訪客 session
-      startAnalyticsSession(siteCode);
-
-      const allSites = JSON.parse(localStorage.getItem(STORAGE_KEY_SITES) || '{}');
-      const targetSite = allSites[siteCode];
-      const iframe = document.getElementById('site-iframe');
-
-      if (targetSite && targetSite.files['index.html']) {
-        iframe.srcdoc = targetSite.files['index.html'];
-      } else {
-        const { baseRepo } = getCleanRoute();
-        iframe.src = `${baseRepo}/sites/${siteCode}/index.html`;
-      }
-    }
-
-    // --- 路由器 (Router) ---
+    // --- 路由切換解析器 ---
     function parseRouter() {
       const { relativePath } = getCleanRoute();
       document.querySelectorAll('.view-panel').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.sidebar-menu li').forEach(el => el.classList.remove('active'));
+
+      const user = JSON.parse(localStorage.getItem(STORAGE_KEY_USER) || 'null');
+      const userBox = document.getElementById('sidebar-user-box');
+
+      if (user) {
+        userBox.style.display = 'flex';
+        document.getElementById('user-name-display').innerText = user.name;
+      } else {
+        userBox.style.display = 'none';
+      }
 
       if (relativePath === '/' || relativePath === '') {
+        document.getElementById('menu-home').classList.add('active');
         document.getElementById('view-home').style.display = 'block';
-        renderPublicSitesList();
+        renderPublicSites();
       } else if (relativePath === '/staff') {
-        const user = JSON.parse(localStorage.getItem(STORAGE_KEY_USER) || 'null');
+        document.getElementById('menu-dashboard').classList.add('active');
         if (!user) {
           document.getElementById('view-auth').style.display = 'block';
         } else {
-          document.getElementById('user-display').innerText = `管理員：${user.name}`;
           document.getElementById('view-dashboard').style.display = 'block';
-          renderMySitesList();
+          renderMyProjectsList();
         }
       } else {
         const siteCode = relativePath.slice(1).split('/')[0];
         document.getElementById('view-site-render').style.display = 'block';
-        loadAndRenderSite(siteCode);
+        loadSiteInIframe(siteCode);
       }
     }
 
-    function renderPublicSitesList() {
-      const listEl = document.getElementById('public-site-list');
+    function renderPublicSites() {
+      const container = document.getElementById('public-sites-container');
       const allSites = JSON.parse(localStorage.getItem(STORAGE_KEY_SITES) || '{}');
       const keys = Object.keys(allSites);
 
       if (keys.length === 0) {
-        listEl.innerHTML = '<p style="color:#a0aec0;">目前沒有公開網站。</p>';
+        container.innerHTML = '<p style="color:#94a3b8; font-size:14px;">目前尚無公開發布的網站。</p>';
         return;
       }
 
-      let html = '';
+      let html = '<table class="table"><thead><tr><th>網站名稱</th><th>狀態</th><th>存取</th></tr></thead><tbody>';
       keys.forEach(code => {
         html += `
-          <div class="site-list-item" style="display:flex; justify-content:space-between; align-items:center;">
-            <span>網站代碼：<strong>${code}</strong></span>
-            <button class="btn btn-secondary btn-sm" onclick="navigateTo('/${code}')">前往欣賞</button>
-          </div>
+          <tr>
+            <td><strong>/${code}</strong></td>
+            <td><span class="badge badge-success">運行中</span></td>
+            <td><button class="btn btn-sm" onclick="navigateTo('/${code}')">前往檢視</button></td>
+          </tr>
         `;
       });
-      listEl.innerHTML = html;
+      html += '</tbody></table>';
+      container.innerHTML = html;
     }
 
-    function showStatus(el, msg, type) {
-      el.className = `status-box ${type}`;
-      el.innerHTML = msg;
-      el.style.display = 'block';
-    }
-
-    // 監聽頁面關閉或離開事件，確保存放最後的停留秒數
     window.addEventListener('beforeunload', endAnalyticsSession);
     window.addEventListener('popstate', parseRouter);
     window.addEventListener('DOMContentLoaded', parseRouter);
