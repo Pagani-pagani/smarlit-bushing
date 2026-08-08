@@ -3,64 +3,47 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smarlit Bushing</title>
-  
-  <!-- Markdown 即時解析器 CDN -->
+  <title>Smarlit Bushing - 線上網頁部署平台</title>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f6f8; color: #333; line-height: 1.6; }
-    .container { max-width: 900px; margin: 30px auto; padding: 25px; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    h1, h2, h3 { color: #1a1a1a; margin-bottom: 15px; }
-    .subtitle { color: #666; margin-bottom: 20px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; color: #1c1e21; line-height: 1.6; }
+    .nav-bar { background: #1a202c; color: #fff; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; }
+    .nav-brand { font-size: 20px; font-weight: bold; cursor: pointer; }
+    .nav-links button { background: transparent; border: 1px solid #4a5568; color: #fff; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+    .nav-links button:hover { background: #2d3748; }
+
+    .container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
+    .card { background: #fff; border-radius: 8px; padding: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+    h2 { margin-bottom: 15px; color: #2d3748; }
     
-    .card { background: #fafafa; border: 1px solid #e1e4e8; border-radius: 6px; padding: 20px; margin-bottom: 20px; }
     .form-group { margin-bottom: 15px; }
-    label { display: block; font-weight: 600; margin-bottom: 5px; }
-    input[type="text"], input[type="password"] {
-      width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;
+    label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 14px; }
+    input[type="text"], input[type="email"], input[type="password"] {
+      width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 5px; font-size: 15px;
     }
-    .file-drop-zone { border: 2px dashed #0066cc; border-radius: 6px; padding: 30px; text-align: center; background: #f0f7ff; cursor: pointer; margin-bottom: 15px; }
     
-    button { padding: 8px 16px; background: #0066cc; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 14px; }
-    button:hover { background: #0052a3; }
-    button.secondary { background: #e2e8f0; color: #333; }
-    button.secondary:hover { background: #cbd5e1; }
-    
-    .status-msg { margin-top: 15px; padding: 10px; border-radius: 4px; font-size: 14px; display: none; }
-    .status-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-    .status-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-    .status-info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
-    
+    .btn { padding: 10px 18px; background: #3182ce; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 15px; }
+    .btn:hover { background: #2b6cb0; }
+    .btn-secondary { background: #718096; }
+    .btn-secondary:hover { background: #4a5568; }
+    .btn-link { background: none; border: none; color: #3182ce; cursor: pointer; text-decoration: underline; font-size: 14px; padding: 0; }
+
+    .file-uploader { border: 2px dashed #3182ce; background: #ebf8ff; padding: 30px; border-radius: 6px; text-align: center; cursor: pointer; }
+    .site-list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #edf2f7; }
+    .site-list-item:last-child { border-bottom: none; }
+
     .view-panel { display: none; }
-    .badge { display: inline-block; padding: 3px 8px; background: #e2e8f0; border-radius: 12px; font-size: 12px; margin-left: 5px; }
+    .status-box { margin-top: 15px; padding: 10px; border-radius: 5px; font-size: 14px; display: none; }
+    .status-box.error { background: #fed7d7; color: #9b2c2c; }
+    .status-box.success { background: #c6f6d5; color: #22543d; }
+    .status-box.info { background: #ebf8ff; color: #2c5282; }
 
-    /* 渲染區頂部工具列 */
-    .site-toolbar {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 10px 15px; background: #24292e; color: #fff; border-radius: 6px 6px 0 0;
-    }
-    .site-toolbar-title { font-weight: bold; font-size: 16px; }
-    .site-toolbar-actions { display: flex; gap: 8px; }
-
-    /* 初次開啟提示橫幅 */
-    .notice-banner {
-      background: #fff3cd; color: #856404; padding: 10px 15px;
-      border: 1px solid #ffeeba; border-top: none; font-size: 14px;
-      display: flex; justify-content: space-between; align-items: center;
-    }
-
-    /* Iframe 與 Markdown 容器 */
-    .render-wrapper { border: 1px solid #e1e4e8; border-top: none; border-radius: 0 0 6px 6px; background: #fff; overflow: hidden; }
-    iframe.site-frame { width: 100%; height: 650px; border: none; display: block; }
-    .markdown-body { padding: 30px; line-height: 1.7; overflow-y: auto; max-height: 650px; }
-    .markdown-body h1, .markdown-body h2 { border-bottom: 1px solid #eaecef; padding-bottom: 0.3em; margin-top: 24px; }
-    .markdown-body code { background: #f6f8fa; padding: 0.2em 0.4em; border-radius: 3px; font-family: monospace; }
-    .markdown-body pre { background: #f6f8fa; padding: 16px; overflow: auto; border-radius: 6px; }
+    iframe.render-frame { width: 100%; height: 750px; border: none; background: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
   </style>
 
-  <!-- SPA 路由路徑還原腳本 -->
+  <!-- SPA 雙斜線與深層路徑自動修復腳本 -->
   <script type="text/javascript">
     (function(l) {
       if (l.search[1] === 'p') {
@@ -78,345 +61,432 @@
 </head>
 <body>
 
-  <div class="container" id="main-container">
-    <h1 id="app-title">Smarlit Bushing</h1>
-
-    <!-- 1. 首頁視圖 -->
-    <div id="home-view" class="view-panel">
-      <p class="subtitle">靜態網頁工具託管與同步系統</p>
-      <div class="card">
-        <h3>查看別人所製作的網站</h3>
-        <div style="display: flex; gap: 10px;">
-          <input type="text" id="site-code-input" placeholder="輸入網站代碼 (例如: cashier-app)">
-          <button onclick="navigateToSite()">前往網站</button>
-        </div>
-      </div>
-      <p style="font-size: 14px; color: #666;">管理員入口：在網址後方輸入 <code>/staff</code> 進行檔案部署</p>
-    </div>
-
-    <!-- 2. Staff 控制台視圖 -->
-    <div id="staff-view" class="view-panel">
-      <h2>Staff 管理控制台</h2>
-      
-      <!-- 設定區塊：GitHub API -->
-      <div class="card">
-        <h3>1. GitHub API 設定</h3>
-        <div class="form-group">
-          <label for="gh-owner">GitHub 帳號/組織名稱 (Owner)</label>
-          <input type="text" id="gh-owner" placeholder="例如: your-username">
-        </div>
-        <div class="form-group">
-          <label for="gh-repo">儲存庫名稱 (Repository)</label>
-          <input type="text" id="gh-repo" value="smarlit-bushing" placeholder="smarlit-bushing">
-        </div>
-        <div class="form-group">
-          <label for="gh-token">Personal Access Token (PAT)</label>
-          <input type="password" id="gh-token" placeholder="貼上 ghp_ 開頭的 Token">
-        </div>
-        <button onclick="saveAndVerifyConfig()">儲存並驗證連線</button>
-        <div id="config-status" class="status-msg"></div>
-      </div>
-
-      <!-- 發布區塊：檔案上傳 -->
-      <div class="card">
-        <h3>2. 建立 / 更新專案網站</h3>
-        <div class="form-group">
-          <label for="upload-code">設定專案代碼 (Site Code)</label>
-          <input type="text" id="upload-code" placeholder="例如: cashier-app">
-        </div>
-
-        <div class="form-group">
-          <label>上傳網站檔案 (支援 HTML, CSS, JS, README.md)</label>
-          <div class="file-drop-zone" onclick="document.getElementById('file-input').click()">
-            <p id="file-drop-text">點擊選取檔案，或將檔案拖曳至此處</p>
-            <input type="file" id="file-input" multiple style="display: none;" onchange="handleFileSelect(event)">
-          </div>
-          <div id="file-list" style="margin-bottom: 10px; font-size: 14px;"></div>
-        </div>
-
-        <button onclick="deployProject()" id="deploy-btn">同步發布至 GitHub</button>
-        <div id="deploy-status" class="status-msg"></div>
-      </div>
-    </div>
-
-    <!-- 3. 動態網站 / README 展演視圖 -->
-    <div id="site-view" class="view-panel">
-      <!-- 頂部工具列 -->
-      <div class="site-toolbar">
-        <div class="site-toolbar-title" id="toolbar-title">Smarlit Bushing</div>
-        <div class="site-toolbar-actions">
-          <button class="secondary" onclick="switchViewMode('app')">網頁內容</button>
-          <button class="secondary" onclick="switchViewMode('md')">README.md</button>
-          <button onclick="navigateHome()">返回首頁</button>
-        </div>
-      </div>
-
-      <!-- 初次開啟提示橫幅 -->
-      <div id="readme-notice" class="notice-banner" style="display: none;">
-        <span>這是你首次存取此網站，此專案包含說明文件。</span>
-        <button class="secondary" style="padding: 4px 10px; font-size: 12px;" onclick="switchViewMode('md')">立即查看 README</button>
-      </div>
-
-      <!-- 內容渲染容器 -->
-      <div class="render-wrapper">
-        <iframe id="site-iframe" class="site-frame" style="display: none;"></iframe>
-        <div id="markdown-container" class="markdown-body" style="display: none;"></div>
-      </div>
+  <!-- 頂部導覽列 -->
+  <div class="nav-bar">
+    <div class="nav-brand" onclick="navigateTo('/')">Smarlit Bushing</div>
+    <div class="nav-links">
+      <button onclick="navigateTo('/staff')">管理控制台 (/staff)</button>
     </div>
   </div>
 
+  <div class="container">
+
+    <!-- 1. 首頁視圖：探索與代碼輸入 -->
+    <div id="view-home" class="view-panel">
+      <div class="card">
+        <h2>查看別人所製作的網站</h2>
+        <p style="color: #4a5568; margin-bottom: 15px;">輸入對方提供給你的網站代碼即可直接開啟：</p>
+        <div style="display: flex; gap: 10px;">
+          <input type="text" id="home-code-input" placeholder="例如: my-cashier-app">
+          <button class="btn" onclick="openSiteFromInput()">前往網站</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>已公開部署的網站列表</h2>
+        <div id="public-site-list">
+          <p style="color: #a0aec0;">尚無公開網站，你可以在控制台發布第一個網站。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 管理帳號驗證視圖 (登入 / 註冊) -->
+    <div id="view-auth" class="view-panel">
+      <div class="card" style="max-width: 450px; margin: 40px auto;">
+        <h2 id="auth-title">登入 Smarlit Bushing 管理帳號</h2>
+        
+        <form onsubmit="handleAuthSubmit(event)">
+          <div class="form-group" id="group-name" style="display: none;">
+            <label for="auth-name">使用者名稱</label>
+            <input type="text" id="auth-name" placeholder="請輸入姓名或暱稱">
+          </div>
+          
+          <div class="form-group">
+            <label for="auth-email">電子郵件 / 帳號</label>
+            <input type="email" id="auth-email" required placeholder="name@example.com">
+          </div>
+
+          <div class="form-group">
+            <label for="auth-password">密碼</label>
+            <input type="password" id="auth-password" required placeholder="請輸入密碼">
+          </div>
+
+          <button type="submit" class="btn" style="width: 100%; margin-top: 10px;" id="auth-submit-btn">登入</button>
+        </form>
+
+        <div style="margin-top: 20px; text-align: center; font-size: 14px;">
+          <span id="auth-toggle-text">還沒有帳號嗎？</span>
+          <button class="btn-link" onclick="toggleAuthMode()" id="auth-toggle-btn">點此註冊</button>
+        </div>
+        <div id="auth-status" class="status-box"></div>
+      </div>
+    </div>
+
+    <!-- 3. 管理控制台視圖 (已登入) -->
+    <div id="view-dashboard" class="view-panel">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2>網站管理控制台</h2>
+        <div>
+          <span id="user-display" style="margin-right: 15px; font-weight: 600;"></span>
+          <button class="btn btn-secondary" onclick="handleLogout()">登出</button>
+        </div>
+      </div>
+
+      <!-- 背景同步 GitHub 設定 (選擇性) -->
+      <div class="card">
+        <h3>GitHub 資料庫同步設定 (備份防遺失)</h3>
+        <p style="font-size: 13px; color: #718096; margin-bottom: 10px;">設定後，你在本地發布的網站檔案會同步備份至 GitHub。</p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px;">
+          <input type="text" id="gh-owner" placeholder="GitHub 帳號">
+          <input type="text" id="gh-repo" value="smarlit-bushing" placeholder="儲存庫">
+          <input type="password" id="gh-token" placeholder="Personal Access Token">
+          <button class="btn btn-secondary" onclick="saveGitHubConfig()">儲存設定</button>
+        </div>
+      </div>
+
+      <!-- 發布新網站區塊 -->
+      <div class="card">
+        <h3>部署新網站</h3>
+        <div class="form-group">
+          <label for="site-code">網站存取代碼 (Site Code)</label>
+          <input type="text" id="site-code" placeholder="例如: cashier-app (訪問網址將為 /cashier-app)">
+        </div>
+
+        <div class="form-group">
+          <label>上傳網頁檔案 (支援 HTML, CSS, JS, README.md)</label>
+          <div class="file-uploader" onclick="document.getElementById('file-input').click()">
+            <p id="file-drop-text">點選檔案進行選擇 (可一次選取多個檔案)</p>
+            <input type="file" id="file-input" multiple style="display: none;" onchange="handleFileSelect(event)">
+          </div>
+          <div id="file-list-display" style="margin-top: 10px;"></div>
+        </div>
+
+        <button class="btn" onclick="deploySiteProcess()">立即部署網站</button>
+        <div id="deploy-status" class="status-box"></div>
+      </div>
+
+      <!-- 部署歷史列表 -->
+      <div class="card">
+        <h3>我管理的網站</h3>
+        <div id="my-sites-list"></div>
+      </div>
+    </div>
+
+    <!-- 4. 網站渲染視圖 -->
+    <div id="view-site-render" class="view-panel">
+      <div style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+        <h3 id="render-site-title">專案載入中...</h3>
+        <div>
+          <button class="btn btn-secondary" onclick="toggleReadmeView()" id="readme-toggle-btn" style="display:none;">查看 README</button>
+          <button class="btn btn-secondary" onclick="navigateTo('/staff')">返回控制台</button>
+        </div>
+      </div>
+      <iframe id="site-iframe" class="render-frame"></iframe>
+      <div id="readme-container" class="card" style="display: none; margin-top: 20px;"></div>
+    </div>
+
+  </div>
+
   <script>
-    const REPO_NAME = '/smarlit-bushing'; // 若儲存庫名稱調整請隨之修改
-    let currentSiteCode = '';
+    // --- 全域變數與儲存 Key ---
+    const STORAGE_KEY_USER = 'sb_user_account';
+    const STORAGE_KEY_SITES = 'sb_deployed_sites';
+    const STORAGE_KEY_GH = 'sb_gh_config';
+    
+    let isRegisterMode = false;
+    let selectedFiles = [];
+    let currentViewingCode = '';
 
-    // --- UTF-8 Base64 工具 ---
-    function utf8ToBase64(str) {
-      return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
-        return String.fromCharCode('0x' + p1);
-      }));
+    // --- 網址路徑建構器 (完全解決雙斜線 // 問題) ---
+    function getCleanRoute() {
+      const path = window.location.pathname;
+      // 取得 Repository 基礎路徑 (例如 /smarlit-bushing)
+      const baseRepo = path.startsWith('/smarlit-bushing') ? '/smarlit-bushing' : '';
+      let relativePath = path.slice(baseRepo.length);
+
+      // 去除尾端多餘斜線
+      if (relativePath.length > 1 && relativePath.endsWith('/')) {
+        relativePath = relativePath.slice(0, -1);
+      }
+      return { baseRepo, relativePath: relativePath || '/' };
     }
 
-    // --- 本地設定與 API ---
-    function getConfig() {
-      return {
-        owner: localStorage.getItem('sb_gh_owner') || '',
-        repo: localStorage.getItem('sb_gh_repo') || 'smarlit-bushing',
-        token: localStorage.getItem('sb_gh_token') || ''
-      };
+    function navigateTo(targetPath) {
+      const { baseRepo } = getCleanRoute();
+      // 確保拼接時不產生連續斜線
+      let finalUrl = baseRepo;
+      if (targetPath.startsWith('/')) {
+        finalUrl += targetPath;
+      } else {
+        finalUrl += '/' + targetPath;
+      }
+      window.history.pushState({}, '', finalUrl);
+      parseRouter();
     }
 
-    function initConfigFields() {
-      const config = getConfig();
-      document.getElementById('gh-owner').value = config.owner;
-      document.getElementById('gh-repo').value = config.repo;
-      document.getElementById('gh-token').value = config.token;
+    // --- 步驟 1: 管理帳號登入 / 註冊邏輯 ---
+    function toggleAuthMode() {
+      isRegisterMode = !isRegisterMode;
+      document.getElementById('auth-title').innerText = isRegisterMode ? '註冊 Smarlit Bushing 帳號' : '登入 Smarlit Bushing 管理帳號';
+      document.getElementById('group-name').style.display = isRegisterMode ? 'block' : 'none';
+      document.getElementById('auth-submit-btn').innerText = isRegisterMode ? '建立帳號並登入' : '登入';
+      document.getElementById('auth-toggle-text').innerText = isRegisterMode ? '已有帳號？' : '還沒有帳號嗎？';
+      document.getElementById('auth-toggle-btn').innerText = isRegisterMode ? '點此登入' : '點此註冊';
     }
 
-    async function saveAndVerifyConfig() {
+    function handleAuthSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('auth-email').value.trim();
+      const password = document.getElementById('auth-password').value.trim();
+      const name = document.getElementById('auth-name').value.trim();
+      const statusEl = document.getElementById('auth-status');
+
+      if (isRegisterMode) {
+        const newUser = { email, name: name || email.split('@')[0], password, createdAt: new Date().toISOString() };
+        localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(newUser));
+        showStatus(statusEl, '註冊成功！系統已永久紀錄帳號。', 'success');
+        setTimeout(() => parseRouter(), 800);
+      } else {
+        const savedUser = JSON.parse(localStorage.getItem(STORAGE_KEY_USER) || 'null');
+        if (!savedUser) {
+          showStatus(statusEl, '尚未建立帳號，請先點選下方「註冊」。', 'error');
+          return;
+        }
+        if (savedUser.email === email && savedUser.password === password) {
+          showStatus(statusEl, '登入成功！', 'success');
+          setTimeout(() => parseRouter(), 500);
+        } else {
+          showStatus(statusEl, '帳號或密碼錯誤。', 'error');
+        }
+      }
+    }
+
+    function handleLogout() {
+      // 清除登入狀態（如果需要的話），此處範例保留帳號資料，僅切換頁面
+      navigateTo('/');
+    }
+
+    // --- 步驟 2: 檔案選擇與部署邏輯 ---
+    function handleFileSelect(e) {
+      selectedFiles = Array.from(e.target.files);
+      const display = document.getElementById('file-list-display');
+      if (selectedFiles.length === 0) { display.innerHTML = ''; return; }
+      
+      let html = '<strong>已選擇的檔案：</strong><ul>';
+      selectedFiles.forEach(f => {
+        html += `<li>${f.name} (${(f.size/1024).toFixed(1)} KB)</li>`;
+      });
+      html += '</ul>';
+      display.innerHTML = html;
+    }
+
+    async function deploySiteProcess() {
+      const siteCode = document.getElementById('site-code').value.trim().toLowerCase();
+      const statusEl = document.getElementById('deploy-status');
+
+      if (!siteCode || siteCode.includes('/') || siteCode.includes(' ')) {
+        showStatus(statusEl, '請輸入有效的網站代碼（不可包含斜線或空格）。', 'error');
+        return;
+      }
+      if (selectedFiles.length === 0) {
+        showStatus(statusEl, '請選取至少一個網頁檔案（需包含 index.html）。', 'error');
+        return;
+      }
+
+      showStatus(statusEl, '正在封裝網頁並部署至本地虛擬主機...', 'info');
+
+      try {
+        const fileDataMap = {};
+        for (let file of selectedFiles) {
+          const content = await file.text();
+          fileDataMap[file.name] = content;
+        }
+
+        if (!fileDataMap['index.html']) {
+          showStatus(statusEl, '檔案列表中必須包含 index.html 作為首頁。', 'error');
+          return;
+        }
+
+        // 1. 寫入本地快取 (達到秒級立即開啟)
+        const allSites = JSON.parse(localStorage.getItem(STORAGE_KEY_SITES) || '{}');
+        allSites[siteCode] = {
+          code: siteCode,
+          files: fileDataMap,
+          updatedAt: new Date().toLocaleString()
+        };
+        localStorage.setItem(STORAGE_KEY_SITES, JSON.stringify(allSites));
+
+        // 2. 背景同步至 GitHub (如果已設定)
+        syncToGitHubBackground(siteCode, fileDataMap);
+
+        showStatus(statusEl, `部署完成！可直接開啟網站。`, 'success');
+        renderMySitesList();
+
+        // 3. 按下部署後直接開啟該網站
+        setTimeout(() => {
+          navigateTo(`/${siteCode}`);
+        }, 1000);
+
+      } catch (err) {
+        showStatus(statusEl, `部署失敗: ${err.message}`, 'error');
+      }
+    }
+
+    async function syncToGitHubBackground(siteCode, fileDataMap) {
+      const ghConfig = JSON.parse(localStorage.getItem(STORAGE_KEY_GH) || 'null');
+      if (!ghConfig || !ghConfig.token) return;
+
+      for (let filename in fileDataMap) {
+        const content = fileDataMap[filename];
+        const path = `sites/${siteCode}/${filename}`;
+        const base64Content = btoa(unescape(encodeURIComponent(content)));
+
+        try {
+          // 檢查 sha
+          let sha = null;
+          const getRes = await fetch(`https://api.github.com/repos/${ghConfig.owner}/${ghConfig.repo}/contents/${path}`, {
+            headers: { 'Authorization': `Bearer ${ghConfig.token}` }
+          });
+          if (getRes.ok) {
+            const data = await getRes.json();
+            sha = data.sha;
+          }
+
+          const payload = { message: `Sync site: ${siteCode}`, content: base64Content, branch: 'main' };
+          if (sha) payload.sha = sha;
+
+          await fetch(`https://api.github.com/repos/${ghConfig.owner}/${ghConfig.repo}/contents/${path}`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${ghConfig.token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        } catch (e) {
+          console.warn('GitHub 背景同步跳過:', e);
+        }
+      }
+    }
+
+    function saveGitHubConfig() {
       const owner = document.getElementById('gh-owner').value.trim();
       const repo = document.getElementById('gh-repo').value.trim();
       const token = document.getElementById('gh-token').value.trim();
-      const statusEl = document.getElementById('config-status');
+      localStorage.setItem(STORAGE_KEY_GH, JSON.stringify({ owner, repo, token }));
+      alert('GitHub 同步設定已儲存！');
+    }
 
-      if (!owner || !repo || !token) {
-        showStatus(statusEl, '請完整填寫所有欄位。', 'error');
+    function renderMySitesList() {
+      const listEl = document.getElementById('my-sites-list');
+      const allSites = JSON.parse(localStorage.getItem(STORAGE_KEY_SITES) || '{}');
+      const keys = Object.keys(allSites);
+
+      if (keys.length === 0) {
+        listEl.innerHTML = '<p style="color:#a0aec0;">目前尚未部署任何網站。</p>';
         return;
       }
 
-      showStatus(statusEl, '正在驗證 API 存取權限...', 'info');
-
-      try {
-        const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (res.ok) {
-          localStorage.setItem('sb_gh_owner', owner);
-          localStorage.setItem('sb_gh_repo', repo);
-          localStorage.setItem('sb_gh_token', token);
-          showStatus(statusEl, '驗證成功！設定已儲存至本地。', 'success');
-        } else {
-          const err = await res.json();
-          showStatus(statusEl, `驗證失敗: ${err.message}`, 'error');
-        }
-      } catch (e) {
-        showStatus(statusEl, `連線異常: ${e.message}`, 'error');
-      }
-    }
-
-    // --- 檔案發布邏輯 ---
-    let selectedFiles = [];
-    function handleFileSelect(evt) {
-      selectedFiles = Array.from(evt.target.files);
-      const listEl = document.getElementById('file-list');
-      if (selectedFiles.length === 0) { listEl.innerHTML = ''; return; }
-      let html = '<strong>已選擇檔案：</strong><ul>';
-      selectedFiles.forEach(f => {
-        html += `<li>${f.name} <span class="badge">${(f.size/1024).toFixed(1)} KB</span></li>`;
+      let html = '';
+      keys.forEach(code => {
+        html += `
+          <div class="site-list-item">
+            <div>
+              <strong>/${code}</strong>
+              <div style="font-size:12px; color:#718096;">更新時間: ${allSites[code].updatedAt}</div>
+            </div>
+            <div>
+              <button class="btn" style="padding:4px 10px; font-size:13px;" onclick="navigateTo('/${code}')">開啟網站</button>
+            </div>
+          </div>
+        `;
       });
-      html += '</ul>';
       listEl.innerHTML = html;
     }
 
-    async function getFileSha(owner, repo, path, token) {
-      try {
-        const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          return data.sha;
-        }
-      } catch (e) { return null; }
-      return null;
+    // --- 步驟 3: 網站預覽與他人網站欣賞 ---
+    function openSiteFromInput() {
+      const code = document.getElementById('home-code-input').value.trim();
+      if (code) navigateTo(`/${code}`);
     }
 
-    async function deployProject() {
-      const config = getConfig();
-      const siteCode = document.getElementById('upload-code').value.trim();
-      const statusEl = document.getElementById('deploy-status');
+    function loadAndRenderSite(siteCode, isMdMode) {
+      currentViewingCode = siteCode;
+      document.getElementById('render-site-title').innerText = `正在瀏覽網站: /${siteCode}`;
 
-      if (!config.token || !config.owner) {
-        showStatus(statusEl, '請先完成上方 GitHub API 設定與驗證。', 'error');
-        return;
+      const allSites = JSON.parse(localStorage.getItem(STORAGE_KEY_SITES) || '{}');
+      const targetSite = allSites[siteCode];
+      const iframe = document.getElementById('site-iframe');
+
+      if (targetSite && targetSite.files['index.html']) {
+        // 從本地虛擬檔案系統直接渲染 (秒開)
+        const htmlContent = targetSite.files['index.html'];
+        iframe.srcdoc = htmlContent;
+      } else {
+        // 若本地無紀錄，嘗試從 GitHub Pages / sites/ 路徑讀取
+        const { baseRepo } = getCleanRoute();
+        iframe.src = `${baseRepo}/sites/${siteCode}/index.html`;
       }
-      if (!siteCode || selectedFiles.length === 0) {
-        showStatus(statusEl, '請填寫專案代碼並選取檔案。', 'error');
-        return;
-      }
+    }
 
-      showStatus(statusEl, '準備上傳至 GitHub...', 'info');
+    // --- 萬用路由器 (Router) ---
+    function parseRouter() {
+      const { relativePath } = getCleanRoute();
+      document.querySelectorAll('.view-panel').forEach(el => el.style.display = 'none');
 
-      try {
-        for (let file of selectedFiles) {
-          showStatus(statusEl, `正在上傳 ${file.name}...`, 'info');
-          const contentText = await file.text();
-          const base64Content = utf8ToBase64(contentText);
-          const path = `sites/${siteCode}/${file.name}`;
-          const existingSha = await getFileSha(config.owner, config.repo, path, config.token);
-
-          const payload = {
-            message: `Deploy ${siteCode}: ${file.name}`,
-            content: base64Content,
-            branch: 'main'
-          };
-          if (existingSha) payload.sha = existingSha;
-
-          const uploadRes = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${path}`, {
-            method: 'PUT',
-            headers: { 'Authorization': `Bearer ${config.token}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-
-          if (!uploadRes.ok) throw new Error(`上傳 ${file.name} 失敗`);
+      if (relativePath === '/' || relativePath === '') {
+        // 1. 首頁
+        document.getElementById('view-home').style.display = 'block';
+        renderPublicSitesList();
+      } else if (relativePath === '/staff') {
+        // 2. 管理頁面：檢查登入狀態
+        const user = JSON.parse(localStorage.getItem(STORAGE_KEY_USER) || 'null');
+        if (!user) {
+          document.getElementById('view-auth').style.display = 'block';
+        } else {
+          document.getElementById('user-display').innerText = `管理員：${user.name}`;
+          document.getElementById('view-dashboard').style.display = 'block';
+          renderMySitesList();
         }
+      } else {
+        // 3. 開啟指定的網站代碼 /[code]
+        const cleanCode = relativePath.slice(1);
+        const parts = cleanCode.split('/');
+        const siteCode = parts[0];
+        const isMd = parts[1] === 'md' || parts[1] === 'markdown';
 
-        const siteUrl = `${window.location.origin}${REPO_NAME}/${siteCode}`;
-        showStatus(statusEl, `部署成功！網站網址：<a href="${siteUrl}" target="_blank">${siteUrl}</a>`, 'success');
-        selectedFiles = [];
-        document.getElementById('file-list').innerHTML = '';
-      } catch (err) {
-        showStatus(statusEl, err.message, 'error');
+        document.getElementById('view-site-render').style.display = 'block';
+        loadAndRenderSite(siteCode, isMd);
       }
+    }
+
+    function renderPublicSitesList() {
+      const listEl = document.getElementById('public-site-list');
+      const allSites = JSON.parse(localStorage.getItem(STORAGE_KEY_SITES) || '{}');
+      const keys = Object.keys(allSites);
+
+      if (keys.length === 0) {
+        listEl.innerHTML = '<p style="color:#a0aec0;">目前沒有公開網站。</p>';
+        return;
+      }
+
+      let html = '';
+      keys.forEach(code => {
+        html += `
+          <div class="site-list-item">
+            <span>網站代碼：<strong>${code}</strong></span>
+            <button class="btn btn-secondary" style="padding:4px 10px; font-size:13px;" onclick="navigateTo('/${code}')">前往欣賞</button>
+          </div>
+        `;
+      });
+      listEl.innerHTML = html;
     }
 
     function showStatus(el, msg, type) {
-      el.className = `status-msg status-${type}`;
+      el.className = `status-box ${type}`;
       el.innerHTML = msg;
       el.style.display = 'block';
     }
 
-    // --- 動態渲染與 Markdown 解析邏輯 ---
-    async function loadSiteContent(siteCode, isMarkdownMode) {
-      currentSiteCode = siteCode;
-      document.getElementById('toolbar-title').innerText = `網站：${siteCode}`;
-
-      const iframe = document.getElementById('site-iframe');
-      const mdContainer = document.getElementById('markdown-container');
-      const noticeBanner = document.getElementById('readme-notice');
-
-      // 相對路徑指引至靜態檔案目錄
-      const targetPath = `${REPO_NAME}/sites/${siteCode}`;
-
-      if (isMarkdownMode) {
-        // Markdown 模式
-        iframe.style.display = 'none';
-        mdContainer.style.display = 'block';
-        noticeBanner.style.display = 'none';
-        mdContainer.innerHTML = '<p style="color:#666;">正在讀取 README.md ...</p>';
-
-        try {
-          const res = await fetch(`${targetPath}/README.md`);
-          if (res.ok) {
-            const markdownText = await res.text();
-            mdContainer.innerHTML = marked.parse(markdownText);
-          } else {
-            mdContainer.innerHTML = '<p style="color:#721c24;">此專案未提供 README.md 說明文件。</p>';
-          }
-        } catch (e) {
-          mdContainer.innerHTML = '<p style="color:#721c24;">讀取文件失敗，請確認檔案是否存在。</p>';
-        }
-
-      } else {
-        // 網頁 (Iframe) 模式
-        mdContainer.style.display = 'none';
-        iframe.style.display = 'block';
-        iframe.src = `${targetPath}/index.html`;
-
-        // 檢查初次開啟與 README 狀態
-        checkFirstVisitReadme(siteCode, targetPath);
-      }
-    }
-
-    async function checkFirstVisitReadme(siteCode, targetPath) {
-      const storageKey = `sb_visited_${siteCode}`;
-      const noticeBanner = document.getElementById('readme-notice');
-      
-      if (!localStorage.getItem(storageKey)) {
-        // 標記為已造訪
-        localStorage.setItem(storageKey, 'true');
-        try {
-          // 發送 HEAD 請求確認 README.md 是否存在
-          const res = await fetch(`${targetPath}/README.md`, { method: 'HEAD' });
-          if (res.ok) {
-            noticeBanner.style.display = 'flex';
-          }
-        } catch (e) {}
-      } else {
-        noticeBanner.style.display = 'none';
-      }
-    }
-
-    function switchViewMode(mode) {
-      if (!currentSiteCode) return;
-      if (mode === 'md') {
-        window.history.pushState({}, '', `${REPO_NAME}/${currentSiteCode}/md`);
-        loadSiteContent(currentSiteCode, true);
-      } else {
-        window.history.pushState({}, '', `${REPO_NAME}/${currentSiteCode}`);
-        loadSiteContent(currentSiteCode, false);
-      }
-    }
-
-    // --- 萬用路由解析器 ---
-    function parseRoute() {
-      const path = window.location.pathname;
-      let cleanPath = path.startsWith(REPO_NAME) ? path.slice(REPO_NAME.length) : path;
-      if (cleanPath.endsWith('/')) cleanPath = cleanPath.slice(0, -1);
-
-      document.querySelectorAll('.view-panel').forEach(el => el.style.display = 'none');
-
-      if (!cleanPath || cleanPath === '') {
-        document.getElementById('home-view').style.display = 'block';
-      } else if (cleanPath === '/staff') {
-        initConfigFields();
-        document.getElementById('staff-view').style.display = 'block';
-      } else {
-        const parts = cleanPath.slice(1).split('/');
-        const siteCode = parts[0];
-        const subRoute = parts[1] ? parts[1].toLowerCase() : '';
-        const isMarkdown = (subRoute === 'md' || subRoute === 'markdown');
-
-        document.getElementById('site-view').style.display = 'block';
-        loadSiteContent(siteCode, isMarkdown);
-      }
-    }
-
-    function navigateToSite() {
-      const code = document.getElementById('site-code-input').value.trim();
-      if (code) {
-        window.history.pushState({}, '', `${REPO_NAME}/${code}`);
-        parseRoute();
-      }
-    }
-
-    function navigateHome() {
-      window.history.pushState({}, '', `${REPO_NAME}/`);
-      parseRoute();
-    }
-
-    window.addEventListener('popstate', parseRoute);
-    window.addEventListener('DOMContentLoaded', parseRoute);
+    window.addEventListener('popstate', parseRouter);
+    window.addEventListener('DOMContentLoaded', parseRouter);
   </script>
 </body>
 </html>
