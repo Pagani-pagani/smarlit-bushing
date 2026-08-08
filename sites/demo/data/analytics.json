@@ -1,7 +1,11 @@
 {
-  "totalVisits": 1,
-  "totalDurationSec": 19,
+  "totalVisits": 2,
+  "totalDurationSec": 70,
   "logs": [
+    {
+      "timestamp": "2026/8/8 下午7:25:11",
+      "durationSec": 51
+    },
     {
       "timestamp": "2026/8/8 下午7:24:07",
       "durationSec": 19
